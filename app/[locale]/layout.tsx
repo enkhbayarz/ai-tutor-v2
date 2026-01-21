@@ -9,6 +9,7 @@ import {
   PostHogProvider,
   PostHogUserIdentifier,
 } from "@/components/providers/posthog-provider";
+import { ConvexClientProvider } from "@/components/providers/convex-provider";
 
 type Props = {
   children: React.ReactNode;
@@ -26,14 +27,16 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <ClerkProvider>
-      <PostHogProvider>
-        <NextIntlClientProvider messages={messages}>
-          <SentryUserProvider>
-            <PostHogUserIdentifier />
-            {children}
-          </SentryUserProvider>
-        </NextIntlClientProvider>
-      </PostHogProvider>
+      <ConvexClientProvider>
+        <PostHogProvider>
+          <NextIntlClientProvider messages={messages}>
+            <SentryUserProvider>
+              <PostHogUserIdentifier />
+              {children}
+            </SentryUserProvider>
+          </NextIntlClientProvider>
+        </PostHogProvider>
+      </ConvexClientProvider>
     </ClerkProvider>
   );
 }

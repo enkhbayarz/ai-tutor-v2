@@ -20,6 +20,7 @@ const isExcludedFromLocale = (pathname: string) => {
     pathname.startsWith("/monitoring") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/ingest") ||
+    pathname.startsWith("/_axiom") ||
     pathname.startsWith("/_next")
   );
 };
