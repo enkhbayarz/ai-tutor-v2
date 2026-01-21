@@ -53,7 +53,12 @@
     "previous": "Өмнөх",
     "next": "Дараагийх",
     "noTeachers": "Одоогоор бүртгэлтэй багш байхгүй байна",
-    "addFirstTeacher": "Шинэ багш нэмэх"
+    "addFirstTeacher": "Шинэ багш нэмэх",
+    "grade": "Анги",
+    "selectGrade": "Анги сонгох",
+    "group": "Бүлэг",
+    "selectGroup": "Бүлэг сонгох",
+    "clearFilters": "Шүүлтүүр арилгах"
   },
   "teacherForm": {
     "title": "Шинэ багш нэмэх",

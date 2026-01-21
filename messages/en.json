@@ -53,7 +53,12 @@
     "previous": "Previous",
     "next": "Next",
     "noTeachers": "No teachers registered yet",
-    "addFirstTeacher": "Add New Teacher"
+    "addFirstTeacher": "Add New Teacher",
+    "grade": "Grade",
+    "selectGrade": "Select grade",
+    "group": "Group",
+    "selectGroup": "Select group",
+    "clearFilters": "Clear filters"
   },
   "teacherForm": {
     "title": "Add New Teacher",

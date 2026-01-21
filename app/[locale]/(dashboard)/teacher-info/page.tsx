@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "convex/react";
@@ -9,10 +9,13 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { TeacherFilters } from "@/components/teachers/teacher-filters";
 import { TeacherTable, Teacher } from "@/components/teachers/teacher-table";
+import { TeacherTableSkeleton } from "@/components/teachers/teacher-table-skeleton";
 import { TeacherEmptyState } from "@/components/teachers/teacher-empty-state";
 import { AddTeacherDialog } from "@/components/teachers/add-teacher-dialog";
 import { EditTeacherDialog } from "@/components/teachers/edit-teacher-dialog";
 import { DeleteConfirmDialog } from "@/components/teachers/delete-confirm-dialog";
+
+const ITEMS_PER_PAGE = 10;
 
 // Extended teacher type that includes Convex data
 interface ConvexTeacher {
@@ -28,9 +31,8 @@ interface ConvexTeacher {
 export default function TeacherInfoPage() {
   const t = useTranslations("teachers");
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string | null>(
-    t("allTeachers")
-  );
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Edit dialog state
@@ -48,8 +50,26 @@ export default function TeacherInfoPage() {
   // Fetch teachers from Convex
   const convexTeachers = useQuery(api.teachers.list);
 
-  // Transform Convex data to match Teacher interface for table display
-  const teachers: Teacher[] = (convexTeachers || []).map((teacher) => ({
+  // Filter on original Convex data first (using numeric grade for exact match)
+  const filteredConvexTeachers = (convexTeachers || []).filter((teacher) => {
+    // Search filter
+    const fullName = `${teacher.lastName} ${teacher.firstName}`.toLowerCase();
+    const matchesSearch =
+      fullName.includes(search.toLowerCase()) ||
+      teacher.firstName.toLowerCase().includes(search.toLowerCase());
+
+    // Grade filter - exact numeric match
+    const matchesGrade =
+      !selectedGrade || teacher.grade === parseInt(selectedGrade);
+
+    // Group filter - exact string match
+    const matchesGroup = !selectedGroup || teacher.group === selectedGroup;
+
+    return matchesSearch && matchesGrade && matchesGroup;
+  });
+
+  // Transform filtered Convex data to Teacher interface for table display
+  const filteredTeachers: Teacher[] = filteredConvexTeachers.map((teacher) => ({
     id: teacher._id,
     name: `${teacher.lastName} ${teacher.firstName}`,
     phone: teacher.phone1,
@@ -58,11 +78,18 @@ export default function TeacherInfoPage() {
     password: "********",
   }));
 
-  const filteredTeachers = teachers.filter(
-    (teacher) =>
-      teacher.name.toLowerCase().includes(search.toLowerCase()) ||
-      teacher.username.toLowerCase().includes(search.toLowerCase())
+  // Paginate filtered teachers
+  const totalPages = Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE) || 1;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedTeachers = filteredTeachers.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
   );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedGrade, selectedGroup]);
 
   const handleEdit = (teacher: Teacher) => {
     // Find the full Convex teacher data
@@ -93,10 +120,31 @@ export default function TeacherInfoPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full px-4"
+              disabled
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {t("exportExcel")}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-blue-500 hover:bg-blue-600 rounded-full px-4"
+              disabled
+            >
+              {t("addTeacher")}
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        </div>
+
+        {/* Separator */}
+        <div className="border-t border-gray-200" />
+
+        {/* Skeleton Table */}
+        <TeacherTableSkeleton />
       </div>
     );
   }
@@ -127,16 +175,18 @@ export default function TeacherInfoPage() {
       <TeacherFilters
         searchValue={search}
         onSearchChange={setSearch}
-        activeFilter={activeFilter}
-        onClearFilter={() => setActiveFilter(null)}
+        selectedGrade={selectedGrade}
+        selectedGroup={selectedGroup}
+        onGradeChange={setSelectedGrade}
+        onGroupChange={setSelectedGroup}
       />
 
       {/* Content */}
       {filteredTeachers.length > 0 ? (
         <TeacherTable
-          teachers={filteredTeachers}
+          teachers={paginatedTeachers}
           currentPage={currentPage}
-          totalPages={Math.ceil(filteredTeachers.length / 10) || 1}
+          totalPages={totalPages}
           onPageChange={setCurrentPage}
           onEdit={handleEdit}
           onDelete={handleDelete}
