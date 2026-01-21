@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bunx shadcn@latest add:*)"
+      "Bash(bunx shadcn@latest add:*)",
+      "Bash(cat:*)"
     ]
   }
 }
