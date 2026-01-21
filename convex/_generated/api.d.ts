@@ -8,13 +8,19 @@
  * @module
  */
 
+import type * as migrations from "../migrations.js";
+import type * as teachers from "../teachers.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  migrations: typeof migrations;
+  teachers: typeof teachers;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.

@@ -1,92 +1,105 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Plus } from "lucide-react";
+import { Download } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { TeacherFilters } from "@/components/teachers/teacher-filters";
 import { TeacherTable, Teacher } from "@/components/teachers/teacher-table";
 import { TeacherEmptyState } from "@/components/teachers/teacher-empty-state";
+import { AddTeacherDialog } from "@/components/teachers/add-teacher-dialog";
+import { EditTeacherDialog } from "@/components/teachers/edit-teacher-dialog";
+import { DeleteConfirmDialog } from "@/components/teachers/delete-confirm-dialog";
 
-// Mock data for testing
-const mockTeachers: Teacher[] = [
-  {
-    id: "1",
-    name: "Лхамсүрэн Долгорсүрэн",
-    phone: "99XXXXXX",
-    username: "Bernard",
-    className: "5А",
-    password: "********",
-  },
-  {
-    id: "2",
-    name: "Батбаяр Хонгорзул",
-    phone: "99XXXXXX",
-    avatar: "",
-    username: "Soham",
-    className: "5Б",
-    password: "********",
-  },
-  {
-    id: "3",
-    name: "Долгор Лхамсүрэн",
-    phone: "99XXXXXX",
-    username: "Dwight",
-    className: "4Б",
-    password: "********",
-  },
-  {
-    id: "4",
-    name: "Батсайхан Батбаяр",
-    phone: "99XXXXXX",
-    username: "Leslie",
-    className: "3Г",
-    password: "********",
-  },
-  {
-    id: "5",
-    name: "Батэрдэнэ Анужин",
-    phone: "99XXXXXX",
-    username: "Mitchell",
-    className: "2А",
-    password: "********",
-  },
-];
+// Extended teacher type that includes Convex data
+interface ConvexTeacher {
+  _id: Id<"teachers">;
+  lastName: string;
+  firstName: string;
+  grade: number;
+  group: string;
+  phone1: string;
+  phone2?: string;
+}
 
 export default function TeacherInfoPage() {
   const t = useTranslations("teachers");
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string | null>(t("allTeachers"));
+  const [activeFilter, setActiveFilter] = useState<string | null>(
+    t("allTeachers")
+  );
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Toggle between empty state and data for demo
-  const [showData, setShowData] = useState(true);
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [teacherToEdit, setTeacherToEdit] = useState<ConvexTeacher | null>(
+    null
+  );
 
-  const filteredTeachers = mockTeachers.filter(
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [teacherToDelete, setTeacherToDelete] = useState<ConvexTeacher | null>(
+    null
+  );
+
+  // Fetch teachers from Convex
+  const convexTeachers = useQuery(api.teachers.list);
+
+  // Transform Convex data to match Teacher interface for table display
+  const teachers: Teacher[] = (convexTeachers || []).map((teacher) => ({
+    id: teacher._id,
+    name: `${teacher.lastName} ${teacher.firstName}`,
+    phone: teacher.phone1,
+    username: teacher.firstName.toLowerCase(),
+    className: `${teacher.grade}${teacher.group}`,
+    password: "********",
+  }));
+
+  const filteredTeachers = teachers.filter(
     (teacher) =>
       teacher.name.toLowerCase().includes(search.toLowerCase()) ||
       teacher.username.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddNew = () => {
-    // TODO: Open add teacher modal
-    console.log("Add new teacher");
-  };
-
   const handleEdit = (teacher: Teacher) => {
-    // TODO: Open edit teacher modal
-    console.log("Edit teacher:", teacher);
+    // Find the full Convex teacher data
+    const convexTeacher = convexTeachers?.find((t) => t._id === teacher.id);
+    if (convexTeacher) {
+      setTeacherToEdit(convexTeacher);
+      setEditDialogOpen(true);
+    }
   };
 
   const handleDelete = (teacher: Teacher) => {
-    // TODO: Confirm and delete teacher
-    console.log("Delete teacher:", teacher);
+    // Find the full Convex teacher data
+    const convexTeacher = convexTeachers?.find((t) => t._id === teacher.id);
+    if (convexTeacher) {
+      setTeacherToDelete(convexTeacher);
+      setDeleteDialogOpen(true);
+    }
   };
 
   const handleExport = () => {
     // TODO: Export to Excel
     console.log("Export to Excel");
   };
+
+  // Loading state
+  if (convexTeachers === undefined) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -103,14 +116,7 @@ export default function TeacherInfoPage() {
             <Download className="w-4 h-4 mr-2" />
             {t("exportExcel")}
           </Button>
-          <Button
-            size="sm"
-            className="bg-blue-500 hover:bg-blue-600 rounded-full px-4"
-            onClick={handleAddNew}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t("addTeacher")}
-          </Button>
+          <AddTeacherDialog />
         </div>
       </div>
 
@@ -126,18 +132,32 @@ export default function TeacherInfoPage() {
       />
 
       {/* Content */}
-      {showData && filteredTeachers.length > 0 ? (
+      {filteredTeachers.length > 0 ? (
         <TeacherTable
           teachers={filteredTeachers}
           currentPage={currentPage}
-          totalPages={10}
+          totalPages={Math.ceil(filteredTeachers.length / 10) || 1}
           onPageChange={setCurrentPage}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
       ) : (
-        <TeacherEmptyState onAddNew={handleAddNew} />
+        <TeacherEmptyState />
       )}
+
+      {/* Edit Teacher Dialog */}
+      <EditTeacherDialog
+        teacher={teacherToEdit}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        teacher={teacherToDelete}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      />
     </div>
   );
 }

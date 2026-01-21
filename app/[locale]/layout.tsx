@@ -10,6 +10,7 @@ import {
   PostHogUserIdentifier,
 } from "@/components/providers/posthog-provider";
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 type Props = {
   children: React.ReactNode;
@@ -33,6 +34,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             <SentryUserProvider>
               <PostHogUserIdentifier />
               {children}
+              <Toaster />
             </SentryUserProvider>
           </NextIntlClientProvider>
         </PostHogProvider>
