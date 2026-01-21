@@ -9,6 +9,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { Users, GraduationCap, BookOpen, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const navItems = [
   { href: "/teacher-info", icon: Users, labelKey: "teachers" },
@@ -26,101 +32,121 @@ export function Sidebar() {
   const [showExpandIcon, setShowExpandIcon] = useState(false);
 
   return (
-    <aside
-      className={cn(
-        "hidden lg:flex flex-col min-h-screen bg-white border-r py-4 transition-all duration-300",
-        expanded ? "w-64 items-start px-4" : "w-16 items-center"
-      )}
-    >
-      {/* Logo / Expand Button */}
-      <div
+    <TooltipProvider delayDuration={0}>
+      <aside
         className={cn(
-          "relative mb-8 flex items-center",
-          expanded ? "w-full justify-between" : "justify-center"
+          "hidden lg:flex flex-col min-h-screen bg-white border-r py-4 transition-all duration-300",
+          expanded ? "w-64 items-start px-4" : "w-16 items-center"
         )}
-        onMouseEnter={() => setShowExpandIcon(true)}
-        onMouseLeave={() => setShowExpandIcon(false)}
       >
-        <Link href={`/${locale}`} className="flex items-center gap-2">
-          <Image
-            src="/logo_ai.png"
-            alt="AI Tutor"
-            width={32}
-            height={32}
-            className="w-8 h-8"
-          />
-          {expanded && (
-            <span className="font-semibold text-gray-900">{tCommon("appName")}</span>
+        {/* Logo / Expand Button */}
+        <div
+          className={cn(
+            "relative mb-8 flex items-center",
+            expanded ? "w-full justify-between" : "justify-center"
           )}
-        </Link>
-
-        {/* Expand/Collapse Button */}
-        {(showExpandIcon || expanded) && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className={cn(
-              "flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer",
-              !expanded && "absolute -right-2 top-1/2 -translate-y-1/2"
+          onMouseEnter={() => setShowExpandIcon(true)}
+          onMouseLeave={() => setShowExpandIcon(false)}
+        >
+          <Link href={`/${locale}`} className="flex items-center gap-2">
+            <Image
+              src="/logo_ai.png"
+              alt="AI Tutor"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+            />
+            {expanded && (
+              <span className="font-semibold text-gray-900">{tCommon("appName")}</span>
             )}
-          >
-            <PanelLeft className={cn("w-5 h-5", expanded && "rotate-180")} />
-          </button>
-        )}
-      </div>
+          </Link>
 
-      {/* Navigation */}
-      <nav className={cn("flex-1 flex flex-col gap-2", expanded && "w-full")}>
-        {navItems.map((item) => {
-          const localizedHref = `/${locale}${item.href}`;
-          const isActive = pathname === localizedHref;
-          const Icon = item.icon;
-          const label = t(item.labelKey);
-
-          return (
-            <Link
-              key={item.href}
-              href={localizedHref}
+          {/* Expand/Collapse Button */}
+          {(showExpandIcon || expanded) && (
+            <button
+              onClick={() => setExpanded(!expanded)}
               className={cn(
-                "flex items-center rounded-xl transition-colors cursor-pointer",
-                expanded
-                  ? "gap-3 px-4 py-3"
-                  : "justify-center w-12 h-12",
-                isActive
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                "flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer",
+                !expanded && "absolute -right-2 top-1/2 -translate-y-1/2"
               )}
-              title={!expanded ? label : undefined}
             >
-              <Icon className="w-5 h-5" />
-              {expanded && (
-                <span className="font-medium">{label}</span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User Info */}
-      <div className={cn("mt-auto pt-4", expanded && "w-full")}>
-        <div className={cn("flex items-center", expanded && "gap-3")}>
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
-            <AvatarFallback>
-              {user?.firstName?.charAt(0) || "U"}
-            </AvatarFallback>
-          </Avatar>
-          {expanded && (
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 truncate">
-                {user?.fullName || tCommon("defaultManager")}
-              </p>
-              <p className="text-sm text-gray-500 truncate">
-                {user?.primaryEmailAddress?.emailAddress || tCommon("defaultEmail")}
-              </p>
-            </div>
+              <PanelLeft className={cn("w-5 h-5", expanded && "rotate-180")} />
+            </button>
           )}
         </div>
-      </div>
-    </aside>
+
+        {/* Navigation */}
+        <nav className={cn("flex-1 flex flex-col gap-2", expanded && "w-full")}>
+          {navItems.map((item) => {
+            const localizedHref = `/${locale}${item.href}`;
+            const isActive = pathname === localizedHref;
+            const Icon = item.icon;
+            const label = t(item.labelKey);
+
+            const navLink = (
+              <Link
+                href={localizedHref}
+                className={cn(
+                  "flex items-center rounded-xl transition-colors cursor-pointer",
+                  expanded
+                    ? "gap-3 px-4 py-3"
+                    : "justify-center w-12 h-12",
+                  isActive
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                {expanded && (
+                  <span className="font-medium">{label}</span>
+                )}
+              </Link>
+            );
+
+            // Show tooltip only when sidebar is collapsed
+            if (!expanded) {
+              return (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger asChild>
+                    {navLink}
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={12}
+                    className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium"
+                  >
+                    {label}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return <div key={item.href}>{navLink}</div>;
+          })}
+        </nav>
+
+        {/* User Info */}
+        <div className={cn("mt-auto pt-4", expanded && "w-full")}>
+          <div className={cn("flex items-center", expanded && "gap-3")}>
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
+              <AvatarFallback>
+                {user?.firstName?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+            {expanded && (
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 truncate">
+                  {user?.fullName || tCommon("defaultManager")}
+                </p>
+                <p className="text-sm text-gray-500 truncate">
+                  {user?.primaryEmailAddress?.emailAddress || tCommon("defaultEmail")}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
+    </TooltipProvider>
   );
 }
