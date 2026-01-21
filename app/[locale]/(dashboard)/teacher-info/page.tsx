@@ -31,8 +31,8 @@ interface ConvexTeacher {
 export default function TeacherInfoPage() {
   const t = useTranslations("teachers");
   const [search, setSearch] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Edit dialog state
@@ -50,7 +50,7 @@ export default function TeacherInfoPage() {
   // Fetch teachers from Convex
   const convexTeachers = useQuery(api.teachers.list);
 
-  // Filter on original Convex data first (using numeric grade for exact match)
+  // Filter on original Convex data (using arrays for multi-select - like SQL IN operator)
   const filteredConvexTeachers = (convexTeachers || []).filter((teacher) => {
     // Search filter
     const fullName = `${teacher.lastName} ${teacher.firstName}`.toLowerCase();
@@ -58,12 +58,14 @@ export default function TeacherInfoPage() {
       fullName.includes(search.toLowerCase()) ||
       teacher.firstName.toLowerCase().includes(search.toLowerCase());
 
-    // Grade filter - exact numeric match
+    // Grade filter - check if grade is in selected grades array (like SQL IN)
     const matchesGrade =
-      !selectedGrade || teacher.grade === parseInt(selectedGrade);
+      selectedGrades.length === 0 ||
+      selectedGrades.includes(teacher.grade.toString());
 
-    // Group filter - exact string match
-    const matchesGroup = !selectedGroup || teacher.group === selectedGroup;
+    // Group filter - check if group is in selected groups array (like SQL IN)
+    const matchesGroup =
+      selectedGroups.length === 0 || selectedGroups.includes(teacher.group);
 
     return matchesSearch && matchesGrade && matchesGroup;
   });
@@ -89,7 +91,7 @@ export default function TeacherInfoPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedGrade, selectedGroup]);
+  }, [search, selectedGrades, selectedGroups]);
 
   const handleEdit = (teacher: Teacher) => {
     // Find the full Convex teacher data
@@ -175,10 +177,10 @@ export default function TeacherInfoPage() {
       <TeacherFilters
         searchValue={search}
         onSearchChange={setSearch}
-        selectedGrade={selectedGrade}
-        selectedGroup={selectedGroup}
-        onGradeChange={setSelectedGrade}
-        onGroupChange={setSelectedGroup}
+        selectedGrades={selectedGrades}
+        selectedGroups={selectedGroups}
+        onGradesChange={setSelectedGrades}
+        onGroupsChange={setSelectedGroups}
       />
 
       {/* Content */}

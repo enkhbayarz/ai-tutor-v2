@@ -46,8 +46,8 @@ export function TeacherTable({
     <div className="bg-white rounded-xl border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="text-gray-500 font-normal">{t("teacher")}</TableHead>
+          <TableRow className="bg-gray-50 hover:bg-gray-50">
+            <TableHead className="text-gray-500 font-normal pl-6">{t("teacher")}</TableHead>
             <TableHead className="text-gray-500 font-normal">
               {t("username")}
             </TableHead>
@@ -61,9 +61,12 @@ export function TeacherTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {teachers.map((teacher) => (
-            <TableRow key={teacher.id} className="hover:bg-gray-50">
-              <TableCell>
+          {teachers.map((teacher, index) => (
+            <TableRow
+              key={teacher.id}
+              className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+            >
+              <TableCell className="pl-6">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={teacher.avatar} alt={teacher.name} />

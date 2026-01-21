@@ -18,8 +18,8 @@ export function TeacherTableSkeleton() {
     <div className="bg-white rounded-xl border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="text-gray-500 font-normal">{t("teacher")}</TableHead>
+          <TableRow className="bg-gray-50 hover:bg-gray-50">
+            <TableHead className="text-gray-500 font-normal pl-6">{t("teacher")}</TableHead>
             <TableHead className="text-gray-500 font-normal">
               {t("username")}
             </TableHead>
@@ -34,8 +34,11 @@ export function TeacherTableSkeleton() {
         </TableHeader>
         <TableBody>
           {Array.from({ length: 5 }).map((_, index) => (
-            <TableRow key={index} className="hover:bg-gray-50">
-              <TableCell>
+            <TableRow
+              key={index}
+              className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+            >
+              <TableCell className="pl-6">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-10 h-10 rounded-full" />
                   <div className="space-y-2">

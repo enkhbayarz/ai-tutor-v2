@@ -19,3 +19,4 @@ export const addStatusToTeachers = mutation({
     return { updatedCount, totalTeachers: teachers.length };
   },
 });
+

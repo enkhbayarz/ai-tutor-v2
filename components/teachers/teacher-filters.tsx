@@ -9,22 +9,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 interface TeacherFiltersProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
-  selectedGrade: string | null;
-  selectedGroup: string | null;
-  onGradeChange: (grade: string | null) => void;
-  onGroupChange: (group: string | null) => void;
+  selectedGrades: string[];
+  selectedGroups: string[];
+  onGradesChange: (grades: string[]) => void;
+  onGroupsChange: (groups: string[]) => void;
 }
 
 const grades = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
@@ -33,25 +27,45 @@ const groups = ["А", "Б", "В", "Г", "Д"];
 export function TeacherFilters({
   searchValue,
   onSearchChange,
-  selectedGrade,
-  selectedGroup,
-  onGradeChange,
-  onGroupChange,
+  selectedGrades,
+  selectedGroups,
+  onGradesChange,
+  onGroupsChange,
 }: TeacherFiltersProps) {
   const t = useTranslations("teachers");
 
-  const hasFilters = selectedGrade || selectedGroup;
+  const hasFilters = selectedGrades.length > 0 || selectedGroups.length > 0;
 
   const clearFilters = () => {
-    onGradeChange(null);
-    onGroupChange(null);
+    onGradesChange([]);
+    onGroupsChange([]);
+  };
+
+  const toggleGrade = (grade: string) => {
+    if (selectedGrades.includes(grade)) {
+      onGradesChange(selectedGrades.filter((g) => g !== grade));
+    } else {
+      onGradesChange([...selectedGrades, grade]);
+    }
+  };
+
+  const toggleGroup = (group: string) => {
+    if (selectedGroups.includes(group)) {
+      onGroupsChange(selectedGroups.filter((g) => g !== group));
+    } else {
+      onGroupsChange([...selectedGroups, group]);
+    }
   };
 
   const getFilterLabel = () => {
     const parts = [];
-    if (selectedGrade) parts.push(`${selectedGrade}-р анги`);
-    if (selectedGroup) parts.push(`${selectedGroup} бүлэг`);
-    return parts.join(", ");
+    if (selectedGrades.length > 0) {
+      parts.push(`${selectedGrades.join(", ")}-р анги`);
+    }
+    if (selectedGroups.length > 0) {
+      parts.push(`${selectedGroups.join(", ")} бүлэг`);
+    }
+    return parts.join(" | ");
   };
 
   return (
@@ -80,44 +94,50 @@ export function TeacherFilters({
               {t("filter")}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-64" align="start">
+          <PopoverContent className="w-72" align="start">
             <div className="space-y-4">
+              {/* Grade Multi-Select */}
               <div className="space-y-2">
                 <Label>{t("grade")}</Label>
-                <Select
-                  value={selectedGrade || ""}
-                  onValueChange={(value) => onGradeChange(value || null)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("selectGrade")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {grades.map((grade) => (
-                      <SelectItem key={grade} value={grade}>
-                        {grade}-р анги
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-4 gap-2">
+                  {grades.map((grade) => (
+                    <div key={grade} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`grade-${grade}`}
+                        checked={selectedGrades.includes(grade)}
+                        onCheckedChange={() => toggleGrade(grade)}
+                      />
+                      <label
+                        htmlFor={`grade-${grade}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        {grade}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
+              {/* Group Multi-Select */}
               <div className="space-y-2">
                 <Label>{t("group")}</Label>
-                <Select
-                  value={selectedGroup || ""}
-                  onValueChange={(value) => onGroupChange(value || null)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("selectGroup")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groups.map((group) => (
-                      <SelectItem key={group} value={group}>
-                        {group} бүлэг
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-3">
+                  {groups.map((group) => (
+                    <div key={group} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`group-${group}`}
+                        checked={selectedGroups.includes(group)}
+                        onCheckedChange={() => toggleGroup(group)}
+                      />
+                      <label
+                        htmlFor={`group-${group}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        {group}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {hasFilters && (
