@@ -6,8 +6,6 @@
 
 Copy this entire prompt to start a fresh Claude Code conversation:
 
----
-
 ```
 Build an AI Tutor web platform for AI Academy Asia - a Mongolian educational platform.
 
