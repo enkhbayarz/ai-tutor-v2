@@ -101,5 +101,10 @@
       "phoneLength": "Phone number must be {length} digits",
       "fixErrors": "Please fix the errors"
     }
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "We couldn't find the page you are looking for. It might have been removed or moved.",
+    "backHome": "Back to home page"
   }
 }
