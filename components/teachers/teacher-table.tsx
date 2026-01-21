@@ -85,13 +85,13 @@ export function TeacherTable({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onDelete(teacher)}
-                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                    className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onEdit(teacher)}
-                    className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                    className="p-2 text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>

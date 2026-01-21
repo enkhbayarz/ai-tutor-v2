@@ -45,7 +45,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="h-8 w-8"
+              className="h-8 w-8 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -63,7 +63,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                   href={item.href}
                   onClick={() => onOpenChange(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer",
                     isActive
                       ? "bg-blue-50 text-blue-600"
                       : "text-gray-600 hover:bg-gray-50"

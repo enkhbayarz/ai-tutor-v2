@@ -15,7 +15,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         variant="ghost"
         size="icon"
         onClick={onMenuClick}
-        className="h-9 w-9"
+        className="h-9 w-9 cursor-pointer"
       >
         <Menu className="h-5 w-5" />
       </Button>
