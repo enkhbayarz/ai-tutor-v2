@@ -5,7 +5,25 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // PostHog reverse proxy to bypass ad-blockers
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+      {
+        source: "/ingest/decide",
+        destination: "https://us.i.posthog.com/decide",
+      },
+    ];
+  },
+  // Skip PostHog requests from middleware
+  skipTrailingSlashRedirect: true,
 };
 
 export default withSentryConfig(withNextIntl(nextConfig), {

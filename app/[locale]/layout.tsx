@@ -4,6 +4,11 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { locales } from "@/i18n/config";
+import { SentryUserProvider } from "@/components/providers/sentry-user-provider";
+import {
+  PostHogProvider,
+  PostHogUserIdentifier,
+} from "@/components/providers/posthog-provider";
 
 type Props = {
   children: React.ReactNode;
@@ -21,9 +26,14 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <ClerkProvider>
-      <NextIntlClientProvider messages={messages}>
-        {children}
-      </NextIntlClientProvider>
+      <PostHogProvider>
+        <NextIntlClientProvider messages={messages}>
+          <SentryUserProvider>
+            <PostHogUserIdentifier />
+            {children}
+          </SentryUserProvider>
+        </NextIntlClientProvider>
+      </PostHogProvider>
     </ClerkProvider>
   );
 }

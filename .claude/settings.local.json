@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(bunx shadcn@latest add:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:posthog.com)"
     ]
   }
 }
