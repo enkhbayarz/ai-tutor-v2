@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useLocale } from "next-intl";
 import { Users, GraduationCap, BookOpen, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +19,7 @@ export const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useUser();
+  const locale = useLocale();
   const [expanded, setExpanded] = useState(false);
   const [showExpandIcon, setShowExpandIcon] = useState(false);
 
@@ -37,7 +39,7 @@ export function Sidebar() {
         onMouseEnter={() => setShowExpandIcon(true)}
         onMouseLeave={() => setShowExpandIcon(false)}
       >
-        <Link href="/" className="flex items-center gap-2">
+        <Link href={`/${locale}`} className="flex items-center gap-2">
           <Image
             src="/logo_ai.png"
             alt="AI Tutor"
@@ -67,13 +69,14 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className={cn("flex-1 flex flex-col gap-2", expanded && "w-full")}>
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const localizedHref = `/${locale}${item.href}`;
+          const isActive = pathname === localizedHref;
           const Icon = item.icon;
 
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={localizedHref}
               className={cn(
                 "flex items-center rounded-xl transition-colors cursor-pointer",
                 expanded

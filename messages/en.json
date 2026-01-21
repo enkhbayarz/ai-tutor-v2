@@ -1,1 +1,35 @@
-{}
+{
+  "common": {
+    "appName": "AI tutor"
+  },
+  "nav": {
+    "teachers": "Teachers",
+    "students": "Students",
+    "textbooks": "Textbooks"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password"
+  },
+  "dashboard": {
+    "teachers": "Teacher Registration",
+    "addTeacher": "Add New Teacher",
+    "exportExcel": "Export Excel",
+    "search": "Search...",
+    "allTeachers": "All Teachers",
+    "teacher": "Teacher",
+    "username": "Username",
+    "class": "Class",
+    "password": "Password",
+    "page": "Page",
+    "of": "of",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "empty": {
+    "noTeachers": "No teachers registered yet",
+    "addFirstTeacher": "Add New Teacher"
+  }
+}

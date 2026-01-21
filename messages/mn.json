@@ -1,1 +1,35 @@
-{}
+{
+  "common": {
+    "appName": "AI tutor"
+  },
+  "nav": {
+    "teachers": "Багш",
+    "students": "Сурагч",
+    "textbooks": "Сурах бичиг"
+  },
+  "auth": {
+    "signIn": "Нэвтрэх",
+    "signUp": "Бүртгүүлэх",
+    "email": "Имэйл",
+    "password": "Нууц үг"
+  },
+  "dashboard": {
+    "teachers": "Багшийн бүртгэл",
+    "addTeacher": "Шинэ багш нэмэх",
+    "exportExcel": "Excel татах",
+    "search": "Хайх...",
+    "allTeachers": "Бүх анши",
+    "teacher": "Багш",
+    "username": "Нэвтрэх нэр",
+    "class": "Анги",
+    "password": "Нууц үг",
+    "page": "Хуудас",
+    "of": "of",
+    "previous": "Өмнөх",
+    "next": "Дараагийх"
+  },
+  "empty": {
+    "noTeachers": "Одоогоор бүртгэлтэй багш байхгүй байна",
+    "addFirstTeacher": "Шинэ багш нэмэх"
+  }
+}
