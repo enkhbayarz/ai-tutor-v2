@@ -14,6 +14,7 @@ import { TeacherEmptyState } from "@/components/teachers/teacher-empty-state";
 import { AddTeacherDialog } from "@/components/teachers/add-teacher-dialog";
 import { EditTeacherDialog } from "@/components/teachers/edit-teacher-dialog";
 import { DeleteConfirmDialog } from "@/components/teachers/delete-confirm-dialog";
+import { exportToExcel } from "@/lib/export-excel";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -112,8 +113,16 @@ export default function TeacherInfoPage() {
   };
 
   const handleExport = () => {
-    // TODO: Export to Excel
-    console.log("Export to Excel");
+    const exportData = filteredConvexTeachers.map((teacher) => ({
+      Овог: teacher.lastName,
+      Нэр: teacher.firstName,
+      Анги: teacher.grade,
+      Бүлэг: teacher.group,
+      "Утас 1": teacher.phone1,
+      "Утас 2": teacher.phone2 || "",
+    }));
+
+    exportToExcel(exportData, "Багшийн_жагсаалт", "Багш нар");
   };
 
   // Loading state
