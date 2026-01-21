@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,8 @@ import { Label } from "@/components/ui/label";
 export default function SignInPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("auth");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,13 +38,11 @@ export default function SignInPage() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/");
+        router.push(`/${locale}`);
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
-      setError(
-        clerkError.errors?.[0]?.message || "Нэвтрэхэд алдаа гарлаа"
-      );
+      setError(clerkError.errors?.[0]?.message || t("signInError"));
     } finally {
       setIsLoading(false);
     }
@@ -60,10 +61,10 @@ export default function SignInPage() {
 
       {/* Heading */}
       <h1 className="text-2xl font-bold text-center mb-2">
-        Welcome to AI tutor!
+        {t("welcomeTitle")}
       </h1>
       <p className="text-muted-foreground text-center mb-8">
-        Your AI assistant for work
+        {t("welcomeSubtitle")}
       </p>
 
       {/* Form */}
@@ -76,13 +77,13 @@ export default function SignInPage() {
 
         {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email">Имэйл</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="email"
               type="email"
-              placeholder="Имэйл оруулаарай"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10"
@@ -93,13 +94,13 @@ export default function SignInPage() {
 
         {/* Password */}
         <div className="space-y-2">
-          <Label htmlFor="password">Нууц үг</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Нууц үгээ оруулаарай"
+              placeholder={t("passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pl-10 pr-10"
@@ -108,7 +109,7 @@ export default function SignInPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -122,26 +123,26 @@ export default function SignInPage() {
         {/* Submit */}
         <Button
           type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-600"
+          className="w-full bg-blue-500 hover:bg-blue-600 cursor-pointer"
           disabled={isLoading}
         >
-          {isLoading ? "Нэвтэрч байна..." : "Нэвтрэх"}
+          {isLoading ? t("signingIn") : t("signIn")}
         </Button>
       </form>
 
       {/* Forgot password */}
       <Link
-        href="/forgot-password"
+        href={`/${locale}/forgot-password`}
         className="mt-4 text-sm text-muted-foreground hover:text-foreground"
       >
-        Нууц үгээ мартсан уу?
+        {t("forgotPassword")}
       </Link>
 
       {/* Sign up link */}
       <p className="mt-6 text-sm text-muted-foreground">
-        Бүртгэл байхгүй юу?{" "}
-        <Link href="/sign-up" className="text-blue-500 hover:underline">
-          Бүртгүүлэх
+        {t("noAccount")}{" "}
+        <Link href={`/${locale}/sign-up`} className="text-blue-500 hover:underline">
+          {t("signUp")}
         </Link>
       </p>
     </div>

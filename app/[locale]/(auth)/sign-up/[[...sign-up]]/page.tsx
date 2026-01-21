@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,8 @@ import { Label } from "@/components/ui/label";
 export default function SignUpPage() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("auth");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -41,9 +44,7 @@ export default function SignUpPage() {
       setPendingVerification(true);
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
-      setError(
-        clerkError.errors?.[0]?.message || "Бүртгүүлэхэд алдаа гарлаа"
-      );
+      setError(clerkError.errors?.[0]?.message || t("signUpError"));
     } finally {
       setIsLoading(false);
     }
@@ -61,13 +62,11 @@ export default function SignUpPage() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/");
+        router.push(`/${locale}`);
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
-      setError(
-        clerkError.errors?.[0]?.message || "Баталгаажуулахад алдаа гарлаа"
-      );
+      setError(clerkError.errors?.[0]?.message || t("verifyError"));
     } finally {
       setIsLoading(false);
     }
@@ -85,10 +84,10 @@ export default function SignUpPage() {
         />
 
         <h1 className="text-2xl font-bold text-center mb-2">
-          Имэйл баталгаажуулалт
+          {t("verificationTitle")}
         </h1>
         <p className="text-muted-foreground text-center mb-8">
-          {email} хаяг руу илгээсэн кодыг оруулна уу
+          {t("verificationSubtitle", { email })}
         </p>
 
         <form onSubmit={handleVerify} className="w-full space-y-4">
@@ -99,11 +98,11 @@ export default function SignUpPage() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="code">Баталгаажуулах код</Label>
+            <Label htmlFor="code">{t("verificationCode")}</Label>
             <Input
               id="code"
               type="text"
-              placeholder="6 оронтой код"
+              placeholder={t("verificationCodePlaceholder")}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               className="text-center text-lg tracking-widest"
@@ -113,10 +112,10 @@ export default function SignUpPage() {
 
           <Button
             type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600"
+            className="w-full bg-blue-500 hover:bg-blue-600 cursor-pointer"
             disabled={isLoading}
           >
-            {isLoading ? "Баталгаажуулж байна..." : "Баталгаажуулах"}
+            {isLoading ? t("verifying") : t("verify")}
           </Button>
         </form>
       </div>
@@ -135,9 +134,9 @@ export default function SignUpPage() {
       />
 
       {/* Heading */}
-      <h1 className="text-2xl font-bold text-center mb-2">Бүртгүүлэх</h1>
+      <h1 className="text-2xl font-bold text-center mb-2">{t("signUpTitle")}</h1>
       <p className="text-muted-foreground text-center mb-8">
-        AI Tutor-т тавтай морил
+        {t("signUpWelcome")}
       </p>
 
       {/* Form */}
@@ -150,13 +149,13 @@ export default function SignUpPage() {
 
         {/* Name */}
         <div className="space-y-2">
-          <Label htmlFor="name">Нэр</Label>
+          <Label htmlFor="name">{t("name")}</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="name"
               type="text"
-              placeholder="Нэрээ оруулаарай"
+              placeholder={t("namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="pl-10"
@@ -167,13 +166,13 @@ export default function SignUpPage() {
 
         {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email">Имэйл</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="email"
               type="email"
-              placeholder="Имэйл оруулаарай"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10"
@@ -184,13 +183,13 @@ export default function SignUpPage() {
 
         {/* Password */}
         <div className="space-y-2">
-          <Label htmlFor="password">Нууц үг</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Нууц үгээ оруулаарай"
+              placeholder={t("passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pl-10 pr-10"
@@ -199,7 +198,7 @@ export default function SignUpPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -216,18 +215,18 @@ export default function SignUpPage() {
         {/* Submit */}
         <Button
           type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-600"
+          className="w-full bg-blue-500 hover:bg-blue-600 cursor-pointer"
           disabled={isLoading}
         >
-          {isLoading ? "Бүртгүүлж байна..." : "Бүртгүүлэх"}
+          {isLoading ? t("signingUp") : t("signUp")}
         </Button>
       </form>
 
       {/* Sign in link */}
       <p className="mt-6 text-sm text-muted-foreground">
-        Бүртгэлтэй юу?{" "}
-        <Link href="/sign-in" className="text-blue-500 hover:underline">
-          Нэвтрэх
+        {t("hasAccount")}{" "}
+        <Link href={`/${locale}/sign-in`} className="text-blue-500 hover:underline">
+          {t("signIn")}
         </Link>
       </p>
     </div>

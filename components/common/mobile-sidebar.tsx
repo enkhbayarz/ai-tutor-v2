@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,6 +26,8 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const pathname = usePathname();
   const { user } = useUser();
   const locale = useLocale();
+  const t = useTranslations("nav");
+  const tCommon = useTranslations("common");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -41,7 +43,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                 height={28}
                 className="w-7 h-7"
               />
-              <span className="font-semibold text-gray-900">AI tutor</span>
+              <span className="font-semibold text-gray-900">{tCommon("appName")}</span>
             </SheetTitle>
             <Button
               variant="ghost"
@@ -59,6 +61,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
               const localizedHref = `/${locale}${item.href}`;
               const isActive = pathname === localizedHref;
               const Icon = item.icon;
+              const label = t(item.labelKey);
 
               return (
                 <Link
@@ -73,7 +76,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                   )}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium">{label}</span>
                 </Link>
               );
             })}
@@ -90,10 +93,10 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 truncate">
-                  {user?.fullName || "Сургалтын менежэр"}
+                  {user?.fullName || tCommon("defaultManager")}
                 </p>
                 <p className="text-sm text-gray-500 truncate">
-                  {user?.primaryEmailAddress?.emailAddress || "admin@school.com"}
+                  {user?.primaryEmailAddress?.emailAddress || tCommon("defaultEmail")}
                 </p>
               </div>
             </div>

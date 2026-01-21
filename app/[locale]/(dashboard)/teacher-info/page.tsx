@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Download, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { TeacherFilters } from "@/components/teachers/teacher-filters";
 import { TeacherTable, Teacher } from "@/components/teachers/teacher-table";
@@ -53,8 +54,9 @@ const mockTeachers: Teacher[] = [
 ];
 
 export default function TeacherInfoPage() {
+  const t = useTranslations("teachers");
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string | null>("Бүх анши");
+  const [activeFilter, setActiveFilter] = useState<string | null>(t("allTeachers"));
   const [currentPage, setCurrentPage] = useState(1);
 
   // Toggle between empty state and data for demo
@@ -90,7 +92,7 @@ export default function TeacherInfoPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">Багшийн бүртгэл</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         <div className="flex items-center gap-2 sm:gap-3">
           <Button
             variant="outline"
@@ -99,7 +101,7 @@ export default function TeacherInfoPage() {
             onClick={handleExport}
           >
             <Download className="w-4 h-4 mr-2" />
-            Excel татах
+            {t("exportExcel")}
           </Button>
           <Button
             size="sm"
@@ -107,7 +109,7 @@ export default function TeacherInfoPage() {
             onClick={handleAddNew}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Шинэ багш нэмэх
+            {t("addTeacher")}
           </Button>
         </div>
       </div>

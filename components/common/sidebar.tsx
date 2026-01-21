@@ -5,21 +5,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Users, GraduationCap, BookOpen, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const navItems = [
-  { href: "/teacher-info", icon: Users, label: "Багш" },
-  { href: "/student-info", icon: GraduationCap, label: "Сурагч" },
-  { href: "/textbook", icon: BookOpen, label: "Сурах бичиг" },
+  { href: "/teacher-info", icon: Users, labelKey: "teachers" },
+  { href: "/student-info", icon: GraduationCap, labelKey: "students" },
+  { href: "/textbook", icon: BookOpen, labelKey: "textbooks" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useUser();
   const locale = useLocale();
+  const t = useTranslations("nav");
+  const tCommon = useTranslations("common");
   const [expanded, setExpanded] = useState(false);
   const [showExpandIcon, setShowExpandIcon] = useState(false);
 
@@ -48,7 +50,7 @@ export function Sidebar() {
             className="w-8 h-8"
           />
           {expanded && (
-            <span className="font-semibold text-gray-900">AI tutor</span>
+            <span className="font-semibold text-gray-900">{tCommon("appName")}</span>
           )}
         </Link>
 
@@ -72,6 +74,7 @@ export function Sidebar() {
           const localizedHref = `/${locale}${item.href}`;
           const isActive = pathname === localizedHref;
           const Icon = item.icon;
+          const label = t(item.labelKey);
 
           return (
             <Link
@@ -86,11 +89,11 @@ export function Sidebar() {
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
               )}
-              title={!expanded ? item.label : undefined}
+              title={!expanded ? label : undefined}
             >
               <Icon className="w-5 h-5" />
               {expanded && (
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{label}</span>
               )}
             </Link>
           );
@@ -109,10 +112,10 @@ export function Sidebar() {
           {expanded && (
             <div className="flex-1 min-w-0">
               <p className="font-medium text-gray-900 truncate">
-                {user?.fullName || "Сургалтын менежэр"}
+                {user?.fullName || tCommon("defaultManager")}
               </p>
               <p className="text-sm text-gray-500 truncate">
-                {user?.primaryEmailAddress?.emailAddress || "admin@school.com"}
+                {user?.primaryEmailAddress?.emailAddress || tCommon("defaultEmail")}
               </p>
             </div>
           )}

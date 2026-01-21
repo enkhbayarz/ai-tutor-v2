@@ -1,6 +1,8 @@
 {
   "common": {
-    "appName": "AI tutor"
+    "appName": "AI tutor",
+    "defaultManager": "Training Manager",
+    "defaultEmail": "admin@school.com"
   },
   "nav": {
     "teachers": "Teachers",
@@ -8,16 +10,39 @@
     "textbooks": "Textbooks"
   },
   "auth": {
+    "welcomeTitle": "Welcome to AI tutor!",
+    "welcomeSubtitle": "Your AI assistant for work",
     "signIn": "Sign In",
     "signUp": "Sign Up",
+    "signingIn": "Signing in...",
+    "signingUp": "Signing up...",
+    "signInError": "Failed to sign in",
+    "signUpError": "Failed to sign up",
+    "verifyError": "Failed to verify",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
     "email": "Email",
-    "password": "Password"
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUpTitle": "Sign Up",
+    "signUpWelcome": "Welcome to AI Tutor",
+    "verificationTitle": "Email Verification",
+    "verificationSubtitle": "Enter the code sent to {email}",
+    "verificationCode": "Verification Code",
+    "verificationCodePlaceholder": "6-digit code",
+    "verify": "Verify",
+    "verifying": "Verifying..."
   },
-  "dashboard": {
-    "teachers": "Teacher Registration",
+  "teachers": {
+    "title": "Teacher Registration",
     "addTeacher": "Add New Teacher",
     "exportExcel": "Export Excel",
-    "search": "Search...",
+    "filter": "Filter",
+    "search": "Search",
     "allTeachers": "All Teachers",
     "teacher": "Teacher",
     "username": "Username",
@@ -26,9 +51,7 @@
     "page": "Page",
     "of": "of",
     "previous": "Previous",
-    "next": "Next"
-  },
-  "empty": {
+    "next": "Next",
     "noTeachers": "No teachers registered yet",
     "addFirstTeacher": "Add New Teacher"
   }

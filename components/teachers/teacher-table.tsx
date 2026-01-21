@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2, Pencil } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
@@ -39,20 +40,22 @@ export function TeacherTable({
   onEdit,
   onDelete,
 }: TeacherTableProps) {
+  const t = useTranslations("teachers");
+
   return (
     <div className="bg-white rounded-xl border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="text-gray-500 font-normal">Багш</TableHead>
+            <TableHead className="text-gray-500 font-normal">{t("teacher")}</TableHead>
             <TableHead className="text-gray-500 font-normal">
-              Нэвтрэх нэр
+              {t("username")}
             </TableHead>
             <TableHead className="text-gray-500 font-normal hidden md:table-cell">
-              Анги
+              {t("class")}
             </TableHead>
             <TableHead className="text-gray-500 font-normal hidden md:table-cell">
-              Нууц үг
+              {t("password")}
             </TableHead>
             <TableHead className="w-24 hidden md:table-cell"></TableHead>
           </TableRow>
@@ -105,7 +108,7 @@ export function TeacherTable({
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 border-t">
         <p className="text-sm text-gray-500">
-          Хуудас {currentPage} of {totalPages}
+          {t("page")} {currentPage} {t("of")} {totalPages}
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -115,7 +118,7 @@ export function TeacherTable({
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage <= 1}
           >
-            Өмнөх
+            {t("previous")}
           </Button>
           <Button
             variant="outline"
@@ -124,7 +127,7 @@ export function TeacherTable({
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages}
           >
-            Дараагийх
+            {t("next")}
           </Button>
         </div>
       </div>

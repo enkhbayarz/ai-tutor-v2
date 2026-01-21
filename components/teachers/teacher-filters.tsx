@@ -1,6 +1,7 @@
 "use client";
 
 import { X, SlidersHorizontal, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -17,6 +18,8 @@ export function TeacherFilters({
   activeFilter,
   onClearFilter,
 }: TeacherFiltersProps) {
+  const t = useTranslations("teachers");
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       {/* Filter Pills */}
@@ -38,7 +41,7 @@ export function TeacherFilters({
           className="rounded-full px-4 h-9 flex-1 sm:flex-none"
         >
           <SlidersHorizontal className="w-4 h-4 mr-2" />
-          Шүүлтүүр
+          {t("filter")}
         </Button>
       </div>
 
@@ -47,7 +50,7 @@ export function TeacherFilters({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
           type="text"
-          placeholder="Search"
+          placeholder={t("search")}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10 rounded-full border-gray-200"

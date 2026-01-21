@@ -1,6 +1,8 @@
 {
   "common": {
-    "appName": "AI tutor"
+    "appName": "AI tutor",
+    "defaultManager": "Сургалтын менежэр",
+    "defaultEmail": "admin@school.com"
   },
   "nav": {
     "teachers": "Багш",
@@ -8,16 +10,39 @@
     "textbooks": "Сурах бичиг"
   },
   "auth": {
+    "welcomeTitle": "Welcome to AI tutor!",
+    "welcomeSubtitle": "Your AI assistant for work",
     "signIn": "Нэвтрэх",
     "signUp": "Бүртгүүлэх",
+    "signingIn": "Нэвтэрч байна...",
+    "signingUp": "Бүртгүүлж байна...",
+    "signInError": "Нэвтрэхэд алдаа гарлаа",
+    "signUpError": "Бүртгүүлэхэд алдаа гарлаа",
+    "verifyError": "Баталгаажуулахад алдаа гарлаа",
+    "name": "Нэр",
+    "namePlaceholder": "Нэрээ оруулаарай",
     "email": "Имэйл",
-    "password": "Нууц үг"
+    "emailPlaceholder": "Имэйл оруулаарай",
+    "password": "Нууц үг",
+    "passwordPlaceholder": "Нууц үгээ оруулаарай",
+    "forgotPassword": "Нууц үгээ мартсан уу?",
+    "noAccount": "Бүртгэл байхгүй юу?",
+    "hasAccount": "Бүртгэлтэй юу?",
+    "signUpTitle": "Бүртгүүлэх",
+    "signUpWelcome": "AI Tutor-т тавтай морил",
+    "verificationTitle": "Имэйл баталгаажуулалт",
+    "verificationSubtitle": "{email} хаяг руу илгээсэн кодыг оруулна уу",
+    "verificationCode": "Баталгаажуулах код",
+    "verificationCodePlaceholder": "6 оронтой код",
+    "verify": "Баталгаажуулах",
+    "verifying": "Баталгаажуулж байна..."
   },
-  "dashboard": {
-    "teachers": "Багшийн бүртгэл",
+  "teachers": {
+    "title": "Багшийн бүртгэл",
     "addTeacher": "Шинэ багш нэмэх",
     "exportExcel": "Excel татах",
-    "search": "Хайх...",
+    "filter": "Шүүлтүүр",
+    "search": "Хайх",
     "allTeachers": "Бүх анши",
     "teacher": "Багш",
     "username": "Нэвтрэх нэр",
@@ -26,9 +51,7 @@
     "page": "Хуудас",
     "of": "of",
     "previous": "Өмнөх",
-    "next": "Дараагийх"
-  },
-  "empty": {
+    "next": "Дараагийх",
     "noTeachers": "Одоогоор бүртгэлтэй багш байхгүй байна",
     "addFirstTeacher": "Шинэ багш нэмэх"
   }

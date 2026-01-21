@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Menu } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 interface MobileHeaderProps {
@@ -9,6 +10,8 @@ interface MobileHeaderProps {
 }
 
 export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
+  const t = useTranslations("common");
+
   return (
     <header className="flex lg:hidden items-center gap-3 px-4 py-3 bg-white border-b">
       <Button
@@ -27,7 +30,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
           height={28}
           className="w-7 h-7"
         />
-        <span className="font-semibold text-gray-900">AI tutor</span>
+        <span className="font-semibold text-gray-900">{t("appName")}</span>
       </div>
     </header>
   );
