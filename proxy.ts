@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import createMiddleware from "next-intl/middleware";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { locales, defaultLocale } from "./i18n/config";
 
 const intlMiddleware = createMiddleware({
@@ -14,12 +14,25 @@ const isPublicRoute = createRouteMatcher([
   "/:locale/sign-up(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, request: NextRequest) => {
-  // Run next-intl middleware first for locale handling
-  const response = intlMiddleware(request);
+// Routes that should skip locale handling
+const isExcludedFromLocale = (pathname: string) => {
+  return (
+    pathname.startsWith("/monitoring") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next")
+  );
+};
 
-  // Get the pathname after locale prefix
+export default clerkMiddleware(async (auth, request: NextRequest) => {
   const pathname = request.nextUrl.pathname;
+
+  // Skip locale middleware for monitoring/api routes
+  if (isExcludedFromLocale(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Run next-intl middleware for locale handling
+  const response = intlMiddleware(request);
 
   // Protect non-public routes
   if (!isPublicRoute(request)) {
