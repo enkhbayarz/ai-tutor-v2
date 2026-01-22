@@ -118,5 +118,55 @@
     "saving": "Saving...",
     "success": "Profile updated successfully",
     "error": "An error occurred"
+  },
+  "helpDialog": {
+    "tabs": {
+      "profile": "Teacher Registration",
+      "password": "Password",
+      "security": "Security"
+    },
+    "save": "Save",
+    "saving": "Saving...",
+    "error": "An error occurred",
+    "profileSuccess": "Information saved successfully",
+    "profile": {
+      "title": "Personal Information",
+      "lastName": "Last Name",
+      "firstName": "First Name",
+      "username": "Username",
+      "phone1": "Contact Phone №1",
+      "phone2": "Contact Phone №2",
+      "schoolInfo": "School Information",
+      "schoolInfoPlaceholder": "Enter other textbook related information here"
+    },
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "requirements": "Your password must contain",
+      "req": {
+        "length": "8-32 characters",
+        "lowercase": "At least one lowercase character (a-z)",
+        "uppercase": "At least one uppercase character (A-Z)",
+        "number": "At least one number",
+        "special": "At least one special character e.g. ! @ # $ %"
+      }
+    },
+    "passwordSuccess": "Password changed successfully",
+    "passwordError": "Failed to change password",
+    "passwordInvalid": "Password does not meet requirements",
+    "passwordMismatch": "Passwords do not match",
+    "passwordIncorrect": "Current password is incorrect",
+    "passwordNotSet": "Password change is not available. You signed up with Google/social login.",
+    "security": {
+      "title": "Security",
+      "recentLogins": "Recent login activity",
+      "recentLoginsDesc": "If there is any unusual activity on your account, we will notify you at",
+      "recentLoginsDesc2": "address.",
+      "active": "Active",
+      "loading": "Loading sessions...",
+      "noSessions": "No active sessions found"
+    }
   }
 }

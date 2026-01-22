@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProfileSettingsDialog } from "./profile-settings-dialog";
+import { HelpDialog } from "./help-dialog";
 
 export const navItems = [
   { href: "/teacher-info", icon: Users, labelKey: "teachers" },
@@ -48,6 +49,7 @@ export function Sidebar() {
   const [expanded, setExpanded] = useState(false);
   const [showExpandIcon, setShowExpandIcon] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -203,7 +205,7 @@ export function Sidebar() {
                 <Settings className="w-4 h-4" />
                 {t("settings")}
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setHelpOpen(true)}>
                 <HelpCircle className="w-4 h-4" />
                 {t("help")}
               </DropdownMenuItem>
@@ -220,6 +222,9 @@ export function Sidebar() {
 
         {/* Profile Settings Dialog */}
         <ProfileSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+        {/* Help Dialog */}
+        <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
       </aside>
     </TooltipProvider>
   );

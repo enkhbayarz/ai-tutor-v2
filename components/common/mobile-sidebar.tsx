@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { navItems } from "./sidebar";
 import { ProfileSettingsDialog } from "./profile-settings-dialog";
+import { HelpDialog } from "./help-dialog";
 
 interface MobileSidebarProps {
   open: boolean;
@@ -39,6 +40,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -146,7 +148,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                   <Settings className="w-4 h-4" />
                   {t("settings")}
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem className="cursor-pointer" onClick={() => setHelpOpen(true)}>
                   <HelpCircle className="w-4 h-4" />
                   {t("help")}
                 </DropdownMenuItem>
@@ -165,6 +167,9 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
 
       {/* Profile Settings Dialog */}
       <ProfileSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* Help Dialog */}
+      <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
     </Sheet>
   );
 }

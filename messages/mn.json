@@ -118,5 +118,55 @@
     "saving": "Хадгалж байна...",
     "success": "Профайл амжилттай шинэчлэгдлээ",
     "error": "Алдаа гарлаа"
+  },
+  "helpDialog": {
+    "tabs": {
+      "profile": "Багшийн бүртгэл",
+      "password": "Нууц үг",
+      "security": "Аюулгүй байдал"
+    },
+    "save": "Хадгалах",
+    "saving": "Хадгалж байна...",
+    "error": "Алдаа гарлаа",
+    "profileSuccess": "Мэдээлэл амжилттай хадгалагдлаа",
+    "profile": {
+      "title": "Хувийн мэдээлэл",
+      "lastName": "Овог",
+      "firstName": "Нэр",
+      "username": "Нэвтрэх нэр",
+      "phone1": "Холбоо барих утасны дугаар №1",
+      "phone2": "Холбоо барих утасны дугаар №2",
+      "schoolInfo": "Сургуулийн мэдээлэл",
+      "schoolInfoPlaceholder": "Сурах бичигтэй холбоотой бусад мэдээллийг энд"
+    },
+    "password": {
+      "title": "Нууц үг",
+      "current": "Одоогийн нууц үг",
+      "new": "Шинэ нууц үг",
+      "confirm": "Шинэ нууц үгээ давтаарай",
+      "requirements": "Your password must contain",
+      "req": {
+        "length": "8-32 characters",
+        "lowercase": "At least one lowercase character (a-z)",
+        "uppercase": "At least one uppercase character (A-Z)",
+        "number": "At least one number",
+        "special": "At least one special character e.g. ! @ # $ %"
+      }
+    },
+    "passwordSuccess": "Нууц үг амжилттай солигдлоо",
+    "passwordError": "Нууц үг солиход алдаа гарлаа",
+    "passwordInvalid": "Нууц үг шаардлага хангахгүй байна",
+    "passwordMismatch": "Нууц үг таарахгүй байна",
+    "passwordIncorrect": "Одоогийн нууц үг буруу байна",
+    "passwordNotSet": "Нууц үг солих боломжгүй. Та Google/нийгмийн сүлжээгээр нэвтэрсэн байна.",
+    "security": {
+      "title": "Аюулгүй байдал",
+      "recentLogins": "Сүүлд системд нэвтэрсэн мэдээлэл",
+      "recentLoginsDesc": "Хэрэв таны бүртгэл дээр ямар нэгэн ер бусын үйлдэл илэрвэл бид танд",
+      "recentLoginsDesc2": "хаягаар мэдэгдэх болно.",
+      "active": "Идэвхитэй",
+      "loading": "Ачаалж байна...",
+      "noSessions": "Идэвхитэй сессия олдсонгүй"
+    }
   }
 }
