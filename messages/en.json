@@ -109,5 +109,14 @@
     "title": "Page Not Found",
     "description": "We couldn't find the page you are looking for. It might have been removed or moved.",
     "backHome": "Back to home page"
+  },
+  "profileSettings": {
+    "title": "Edit Profile",
+    "displayName": "Display name",
+    "username": "Username",
+    "save": "Save",
+    "saving": "Saving...",
+    "success": "Profile updated successfully",
+    "error": "An error occurred"
   }
 }

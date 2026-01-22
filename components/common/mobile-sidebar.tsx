@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -24,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { navItems } from "./sidebar";
+import { ProfileSettingsDialog } from "./profile-settings-dialog";
 
 interface MobileSidebarProps {
   open: boolean;
@@ -36,6 +38,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const locale = useLocale();
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -139,7 +142,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                 </div>
                 <DropdownMenuSeparator />
                 {/* Menu Items */}
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem className="cursor-pointer" onClick={() => setSettingsOpen(true)}>
                   <Settings className="w-4 h-4" />
                   {t("settings")}
                 </DropdownMenuItem>
@@ -159,6 +162,9 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
           </div>
         </div>
       </SheetContent>
+
+      {/* Profile Settings Dialog */}
+      <ProfileSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </Sheet>
   );
 }

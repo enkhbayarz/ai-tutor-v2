@@ -10,6 +10,7 @@
 
 import type * as migrations from "../migrations.js";
 import type * as teachers from "../teachers.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -20,6 +21,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   teachers: typeof teachers;
+  users: typeof users;
 }>;
 
 /**

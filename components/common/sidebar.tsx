@@ -31,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ProfileSettingsDialog } from "./profile-settings-dialog";
 
 export const navItems = [
   { href: "/teacher-info", icon: Users, labelKey: "teachers" },
@@ -46,6 +47,7 @@ export function Sidebar() {
   const tCommon = useTranslations("common");
   const [expanded, setExpanded] = useState(false);
   const [showExpandIcon, setShowExpandIcon] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -197,7 +199,7 @@ export function Sidebar() {
               </div>
               <DropdownMenuSeparator />
               {/* Menu Items */}
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setSettingsOpen(true)}>
                 <Settings className="w-4 h-4" />
                 {t("settings")}
               </DropdownMenuItem>
@@ -215,6 +217,9 @@ export function Sidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Profile Settings Dialog */}
+        <ProfileSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       </aside>
     </TooltipProvider>
   );
