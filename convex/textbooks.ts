@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 // List active textbooks
 export const list = query({
@@ -150,3 +149,41 @@ export const deleteFile = mutation({
     await ctx.storage.delete(args.storageId);
   },
 });
+
+// ============================================
+// PDF Text Extraction for RAG
+// ============================================
+
+// Internal query to get textbook by ID with PDF URL (used by action)
+export const getByIdInternal = query({
+  args: { id: v.id("textbooks") },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.id);
+    if (!textbook) return null;
+
+    const pdfUrl = await ctx.storage.getUrl(textbook.pdfFileId);
+    return {
+      ...textbook,
+      pdfUrl,
+    };
+  },
+});
+
+// Update extracted text and status
+export const updateExtractedText = mutation({
+  args: {
+    id: v.id("textbooks"),
+    extractedText: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed")),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      extractedText: args.extractedText,
+      textExtractionStatus: args.status,
+      textExtractionError: args.error,
+      updatedAt: Date.now(),
+    });
+  },
+});
+

@@ -57,6 +57,12 @@ export default defineSchema({
     thumbnailId: v.id("_storage"),
     notes: v.optional(v.string()),
     status: v.optional(v.union(v.literal("active"), v.literal("deleted"))),
+    // PDF text extraction for RAG
+    extractedText: v.optional(v.string()),
+    textExtractionStatus: v.optional(
+      v.union(v.literal("pending"), v.literal("completed"), v.literal("failed"))
+    ),
+    textExtractionError: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })

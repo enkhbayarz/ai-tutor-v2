@@ -132,6 +132,17 @@ export default function EditTextbookPage() {
         notes: formData.notes || undefined,
       });
 
+      // Re-trigger PDF text extraction if PDF was replaced
+      if (pdfFileId !== originalPdfId) {
+        fetch("/api/extract-pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ textbookId }),
+        }).catch((err) => {
+          console.error("PDF extraction failed:", err);
+        });
+      }
+
       toast.success(tForm("updateSuccess"));
       router.push(`/${locale}/textbook`);
     } catch (error) {

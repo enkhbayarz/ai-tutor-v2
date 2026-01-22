@@ -143,7 +143,7 @@ export default function AddTextbookPage() {
 
     setIsSaving(true);
     try {
-      await createTextbook({
+      const textbookId = await createTextbook({
         subjectName: formData.subjectName!,
         grade: parseInt(formData.grade!),
         year: parseInt(formData.year!),
@@ -152,6 +152,15 @@ export default function AddTextbookPage() {
         pdfFileId: pdfFileId!,
         thumbnailId: thumbnailId!,
         notes: formData.notes || undefined,
+      });
+
+      // Trigger PDF text extraction (fire and forget)
+      fetch("/api/extract-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ textbookId }),
+      }).catch((err) => {
+        console.error("PDF extraction failed:", err);
       });
 
       clearDraft();
