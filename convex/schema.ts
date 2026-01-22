@@ -47,6 +47,23 @@ export default defineSchema({
     .index("by_grade", ["grade"])
     .index("by_status", ["status"]),
 
+  textbooks: defineTable({
+    subjectName: v.string(),
+    grade: v.number(),
+    year: v.number(),
+    type: v.string(),
+    isValid: v.boolean(),
+    pdfFileId: v.id("_storage"),
+    thumbnailId: v.id("_storage"),
+    notes: v.optional(v.string()),
+    status: v.optional(v.union(v.literal("active"), v.literal("deleted"))),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_grade", ["grade"])
+    .index("by_subject", ["subjectName"])
+    .index("by_status", ["status"]),
+
   // Login history for security tab - populated by Clerk webhooks
   loginHistory: defineTable({
     clerkUserId: v.string(),

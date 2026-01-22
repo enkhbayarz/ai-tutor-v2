@@ -13,6 +13,7 @@ import type * as loginHistory from "../loginHistory.js";
 import type * as migrations from "../migrations.js";
 import type * as students from "../students.js";
 import type * as teachers from "../teachers.js";
+import type * as textbooks from "../textbooks.js";
 import type * as users from "../users.js";
 
 import type {
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   students: typeof students;
   teachers: typeof teachers;
+  textbooks: typeof textbooks;
   users: typeof users;
 }>;
 
