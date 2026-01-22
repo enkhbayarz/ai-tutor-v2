@@ -5,8 +5,9 @@ import Link from "next/link";
 import { Plus, FileText, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useTextbooks } from "@/components/textbook/textbook-context";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -45,8 +46,8 @@ export default function TextbookPage() {
     name: string;
   } | null>(null);
 
-  // Convex
-  const textbooks = useQuery(api.textbooks.list);
+  // Convex - textbooks from context (persists during navigation)
+  const textbooks = useTextbooks();
   const softDeleteTextbook = useMutation(api.textbooks.softDelete);
 
   // Filter textbooks
