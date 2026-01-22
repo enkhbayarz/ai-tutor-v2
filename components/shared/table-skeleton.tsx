@@ -9,35 +9,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useTranslations } from "next-intl";
 
-export function TeacherTableSkeleton() {
-  const t = useTranslations("teachers");
+interface TableSkeletonProps {
+  columns: { label: string; className?: string }[];
+  rows?: number;
+}
 
+export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
   return (
     <div className="bg-white rounded-xl border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50 hover:bg-gray-50">
-            <TableHead className="text-gray-500 font-normal pl-6">{t("teacher")}</TableHead>
-            <TableHead className="text-gray-500 font-normal">
-              {t("username")}
-            </TableHead>
-            <TableHead className="text-gray-500 font-normal hidden md:table-cell">
-              {t("class")}
-            </TableHead>
-            <TableHead className="text-gray-500 font-normal hidden md:table-cell">
-              {t("password")}
-            </TableHead>
+            {columns.map((col, i) => (
+              <TableHead
+                key={i}
+                className={`text-gray-500 font-normal ${col.className || ""}`}
+              >
+                {col.label}
+              </TableHead>
+            ))}
             <TableHead className="w-24 hidden md:table-cell"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.from({ length: 5 }).map((_, index) => (
+          {Array.from({ length: rows }).map((_, index) => (
             <TableRow
               key={index}
               className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
             >
+              {/* First column - Avatar with name/phone */}
               <TableCell className="pl-6">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-10 h-10 rounded-full" />
@@ -47,15 +48,13 @@ export function TeacherTableSkeleton() {
                   </div>
                 </div>
               </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-20" />
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Skeleton className="h-4 w-12" />
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Skeleton className="h-4 w-16" />
-              </TableCell>
+              {/* Other columns */}
+              {columns.slice(1).map((_, colIndex) => (
+                <TableCell key={colIndex} className="hidden md:table-cell">
+                  <Skeleton className="h-4 w-20" />
+                </TableCell>
+              ))}
+              {/* Action buttons */}
               <TableCell className="hidden md:table-cell">
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-8 w-8 rounded" />

@@ -1,7 +1,6 @@
 "use client";
 
 import { X, SlidersHorizontal, Search } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,28 +11,34 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-interface TeacherFiltersProps {
+const GRADES = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
+const GROUPS = ["А", "Б", "В", "Г", "Д"];
+
+interface EntityFiltersProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   selectedGrades: string[];
   selectedGroups: string[];
   onGradesChange: (grades: string[]) => void;
   onGroupsChange: (groups: string[]) => void;
+  labels: {
+    search: string;
+    filter: string;
+    grade: string;
+    group: string;
+    clearFilters: string;
+  };
 }
 
-const grades = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
-const groups = ["А", "Б", "В", "Г", "Д"];
-
-export function TeacherFilters({
+export function EntityFilters({
   searchValue,
   onSearchChange,
   selectedGrades,
   selectedGroups,
   onGradesChange,
   onGroupsChange,
-}: TeacherFiltersProps) {
-  const t = useTranslations("teachers");
-
+  labels,
+}: EntityFiltersProps) {
   const hasFilters = selectedGrades.length > 0 || selectedGroups.length > 0;
 
   const clearFilters = () => {
@@ -91,16 +96,16 @@ export function TeacherFilters({
               className="rounded-full px-4 h-9 flex-1 sm:flex-none"
             >
               <SlidersHorizontal className="w-4 h-4 mr-2" />
-              {t("filter")}
+              {labels.filter}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-72" align="start">
             <div className="space-y-4">
               {/* Grade Multi-Select */}
               <div className="space-y-2">
-                <Label>{t("grade")}</Label>
+                <Label>{labels.grade}</Label>
                 <div className="grid grid-cols-4 gap-2">
-                  {grades.map((grade) => (
+                  {GRADES.map((grade) => (
                     <div key={grade} className="flex items-center space-x-2">
                       <Checkbox
                         id={`grade-${grade}`}
@@ -120,9 +125,9 @@ export function TeacherFilters({
 
               {/* Group Multi-Select */}
               <div className="space-y-2">
-                <Label>{t("group")}</Label>
+                <Label>{labels.group}</Label>
                 <div className="flex flex-wrap gap-3">
-                  {groups.map((group) => (
+                  {GROUPS.map((group) => (
                     <div key={group} className="flex items-center space-x-2">
                       <Checkbox
                         id={`group-${group}`}
@@ -147,7 +152,7 @@ export function TeacherFilters({
                   className="w-full"
                   onClick={clearFilters}
                 >
-                  {t("clearFilters")}
+                  {labels.clearFilters}
                 </Button>
               )}
             </div>
@@ -160,7 +165,7 @@ export function TeacherFilters({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
           type="text"
-          placeholder={t("search")}
+          placeholder={labels.search}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10 rounded-full border-gray-200"

@@ -19,13 +19,13 @@ import {
   PersonFormData,
   DeleteDialog,
 } from "@/components/shared";
-import { teacherFormSchema, VALIDATION_LIMITS } from "@/lib/validations/teacher";
+import { studentFormSchema, VALIDATION_LIMITS } from "@/lib/validations/student";
 import { exportToExcel } from "@/lib/export-excel";
 
 const ITEMS_PER_PAGE = 10;
 
-interface ConvexTeacher {
-  _id: Id<"teachers">;
+interface ConvexStudent {
+  _id: Id<"students">;
   lastName: string;
   firstName: string;
   grade: number;
@@ -34,7 +34,7 @@ interface ConvexTeacher {
   phone2?: string;
 }
 
-interface TableTeacher {
+interface TableStudent {
   id: string;
   name: string;
   phone: string;
@@ -43,9 +43,9 @@ interface TableTeacher {
   password: string;
 }
 
-export default function TeacherInfoPage() {
-  const t = useTranslations("teachers");
-  const tForm = useTranslations("teacherForm");
+export default function StudentInfoPage() {
+  const t = useTranslations("students");
+  const tForm = useTranslations("studentForm");
   const [search, setSearch] = useState("");
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -56,46 +56,46 @@ export default function TeacherInfoPage() {
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [teacherToEdit, setTeacherToEdit] = useState<ConvexTeacher | null>(null);
+  const [studentToEdit, setStudentToEdit] = useState<ConvexStudent | null>(null);
 
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [teacherToDelete, setTeacherToDelete] = useState<ConvexTeacher | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<ConvexStudent | null>(null);
 
   // Convex queries/mutations
-  const convexTeachers = useQuery(api.teachers.list);
-  const createTeacher = useMutation(api.teachers.create);
-  const updateTeacher = useMutation(api.teachers.update);
-  const softDeleteTeacher = useMutation(api.teachers.softDelete);
+  const convexStudents = useQuery(api.students.list);
+  const createStudent = useMutation(api.students.create);
+  const updateStudent = useMutation(api.students.update);
+  const softDeleteStudent = useMutation(api.students.softDelete);
 
-  // Filter teachers
-  const filteredConvexTeachers = (convexTeachers || []).filter((teacher) => {
-    const fullName = `${teacher.lastName} ${teacher.firstName}`.toLowerCase();
+  // Filter students
+  const filteredConvexStudents = (convexStudents || []).filter((student) => {
+    const fullName = `${student.lastName} ${student.firstName}`.toLowerCase();
     const matchesSearch =
       fullName.includes(search.toLowerCase()) ||
-      teacher.firstName.toLowerCase().includes(search.toLowerCase());
+      student.firstName.toLowerCase().includes(search.toLowerCase());
     const matchesGrade =
       selectedGrades.length === 0 ||
-      selectedGrades.includes(teacher.grade.toString());
+      selectedGrades.includes(student.grade.toString());
     const matchesGroup =
-      selectedGroups.length === 0 || selectedGroups.includes(teacher.group);
+      selectedGroups.length === 0 || selectedGroups.includes(student.group);
     return matchesSearch && matchesGrade && matchesGroup;
   });
 
   // Transform to table format
-  const filteredTeachers: TableTeacher[] = filteredConvexTeachers.map((teacher) => ({
-    id: teacher._id,
-    name: `${teacher.lastName} ${teacher.firstName}`,
-    phone: teacher.phone1,
-    username: teacher.firstName.toLowerCase(),
-    className: `${teacher.grade}${teacher.group}`,
+  const filteredStudents: TableStudent[] = filteredConvexStudents.map((student) => ({
+    id: student._id,
+    name: `${student.lastName} ${student.firstName}`,
+    phone: student.phone1,
+    username: student.firstName.toLowerCase(),
+    className: `${student.grade}${student.group}`,
     password: "********",
   }));
 
   // Pagination
-  const totalPages = Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE) || 1;
+  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE) || 1;
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedTeachers = filteredTeachers.slice(
+  const paginatedStudents = filteredStudents.slice(
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
@@ -106,10 +106,10 @@ export default function TeacherInfoPage() {
   }, [search, selectedGrades, selectedGroups]);
 
   // Table columns
-  const columns: Column<TableTeacher>[] = [
+  const columns: Column<TableStudent>[] = [
     {
       key: "name",
-      label: t("teacher"),
+      label: t("student"),
       render: (item) => (
         <AvatarCell name={item.name} subtitle={item.phone} />
       ),
@@ -134,24 +134,24 @@ export default function TeacherInfoPage() {
     },
   ];
 
-  const handleEdit = (teacher: TableTeacher) => {
-    const convexTeacher = convexTeachers?.find((t) => t._id === teacher.id);
-    if (convexTeacher) {
-      setTeacherToEdit(convexTeacher);
+  const handleEdit = (student: TableStudent) => {
+    const convexStudent = convexStudents?.find((s) => s._id === student.id);
+    if (convexStudent) {
+      setStudentToEdit(convexStudent);
       setEditDialogOpen(true);
     }
   };
 
-  const handleDelete = (teacher: TableTeacher) => {
-    const convexTeacher = convexTeachers?.find((t) => t._id === teacher.id);
-    if (convexTeacher) {
-      setTeacherToDelete(convexTeacher);
+  const handleDelete = (student: TableStudent) => {
+    const convexStudent = convexStudents?.find((s) => s._id === student.id);
+    if (convexStudent) {
+      setStudentToDelete(convexStudent);
       setDeleteDialogOpen(true);
     }
   };
 
   const handleAddSubmit = async (data: PersonFormData) => {
-    await createTeacher({
+    await createStudent({
       lastName: data.lastName.trim(),
       firstName: data.firstName.trim(),
       grade: parseInt(data.grade),
@@ -162,9 +162,9 @@ export default function TeacherInfoPage() {
   };
 
   const handleEditSubmit = async (data: PersonFormData) => {
-    if (!teacherToEdit) return;
-    await updateTeacher({
-      id: teacherToEdit._id,
+    if (!studentToEdit) return;
+    await updateStudent({
+      id: studentToEdit._id,
       lastName: data.lastName.trim(),
       firstName: data.firstName.trim(),
       grade: parseInt(data.grade),
@@ -175,21 +175,21 @@ export default function TeacherInfoPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!teacherToDelete) return;
-    await softDeleteTeacher({ id: teacherToDelete._id });
+    if (!studentToDelete) return;
+    await softDeleteStudent({ id: studentToDelete._id });
     toast.success(tForm("deleteSuccess"));
   };
 
   const handleExport = () => {
-    const exportData = filteredConvexTeachers.map((teacher) => ({
-      Овог: teacher.lastName,
-      Нэр: teacher.firstName,
-      Анги: teacher.grade,
-      Бүлэг: teacher.group,
-      "Утас 1": teacher.phone1,
-      "Утас 2": teacher.phone2 || "",
+    const exportData = filteredConvexStudents.map((student) => ({
+      Овог: student.lastName,
+      Нэр: student.firstName,
+      Анги: student.grade,
+      Бүлэг: student.group,
+      "Утас 1": student.phone1,
+      "Утас 2": student.phone2 || "",
     }));
-    exportToExcel(exportData, "Багшийн_жагсаалт", "Багш нар");
+    exportToExcel(exportData, "Сурагчийн_жагсаалт", "Сурагч нар");
   };
 
   // Form labels
@@ -221,7 +221,7 @@ export default function TeacherInfoPage() {
   };
 
   // Loading state
-  if (convexTeachers === undefined) {
+  if (convexStudents === undefined) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -233,14 +233,14 @@ export default function TeacherInfoPage() {
             </Button>
             <Button size="sm" className="bg-blue-500 rounded-full px-4" disabled>
               <Plus className="w-4 h-4 mr-2" />
-              {t("addTeacher")}
+              {t("addStudent")}
             </Button>
           </div>
         </div>
         <div className="border-t border-gray-200" />
         <TableSkeleton
           columns={[
-            { label: t("teacher"), className: "pl-6" },
+            { label: t("student"), className: "pl-6" },
             { label: t("username") },
             { label: t("class") },
             { label: t("password") },
@@ -271,7 +271,7 @@ export default function TeacherInfoPage() {
             onClick={() => setAddDialogOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
-            {t("addTeacher")}
+            {t("addStudent")}
           </Button>
         </div>
       </div>
@@ -296,9 +296,9 @@ export default function TeacherInfoPage() {
       />
 
       {/* Content */}
-      {filteredTeachers.length > 0 ? (
+      {filteredStudents.length > 0 ? (
         <DataTable
-          data={paginatedTeachers}
+          data={paginatedStudents}
           columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -316,50 +316,50 @@ export default function TeacherInfoPage() {
         />
       ) : (
         <EmptyState
-          message={t("noTeachers")}
+          message={t("noStudents")}
           action={
             <Button
               className="bg-blue-500 hover:bg-blue-600 rounded-full px-6"
               onClick={() => setAddDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              {t("addFirstTeacher")}
+              {t("addFirstStudent")}
             </Button>
           }
         />
       )}
 
-      {/* Add Teacher Dialog */}
+      {/* Add Student Dialog */}
       <PersonFormDialog
         mode="add"
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSubmit={handleAddSubmit}
-        validationSchema={teacherFormSchema}
+        validationSchema={studentFormSchema}
         validationLimits={VALIDATION_LIMITS}
         labels={formLabels}
         translateValidation={(key, params) => tForm(key, params as Record<string, string | number | Date> | undefined)}
       />
 
-      {/* Edit Teacher Dialog */}
+      {/* Edit Student Dialog */}
       <PersonFormDialog
         mode="edit"
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         initialData={
-          teacherToEdit
+          studentToEdit
             ? {
-                lastName: teacherToEdit.lastName,
-                firstName: teacherToEdit.firstName,
-                grade: teacherToEdit.grade.toString(),
-                group: teacherToEdit.group,
-                phone1: teacherToEdit.phone1,
-                phone2: teacherToEdit.phone2 || "",
+                lastName: studentToEdit.lastName,
+                firstName: studentToEdit.firstName,
+                grade: studentToEdit.grade.toString(),
+                group: studentToEdit.group,
+                phone1: studentToEdit.phone1,
+                phone2: studentToEdit.phone2 || "",
               }
             : undefined
         }
         onSubmit={handleEditSubmit}
-        validationSchema={teacherFormSchema}
+        validationSchema={studentFormSchema}
         validationLimits={VALIDATION_LIMITS}
         labels={editFormLabels}
         translateValidation={(key, params) => tForm(key, params as Record<string, string | number | Date> | undefined)}
@@ -371,8 +371,8 @@ export default function TeacherInfoPage() {
         onOpenChange={setDeleteDialogOpen}
         title={tForm("deleteTitle")}
         description={tForm("deleteConfirmation", {
-          name: teacherToDelete
-            ? `${teacherToDelete.lastName} ${teacherToDelete.firstName}`
+          name: studentToDelete
+            ? `${studentToDelete.lastName} ${studentToDelete.firstName}`
             : "",
         })}
         onConfirm={handleDeleteConfirm}

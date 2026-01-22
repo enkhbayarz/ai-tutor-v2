@@ -29,7 +29,23 @@ export default defineSchema({
     status: v.optional(v.union(v.literal("active"), v.literal("deleted"))),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
-  }),
+  })
+    .index("by_grade", ["grade"])
+    .index("by_status", ["status"]),
+
+  students: defineTable({
+    lastName: v.string(),
+    firstName: v.string(),
+    grade: v.number(), // 1-12
+    group: v.string(), // А, Б, В, Г, Д, etc.
+    phone1: v.string(),
+    phone2: v.optional(v.string()),
+    status: v.optional(v.union(v.literal("active"), v.literal("deleted"))),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_grade", ["grade"])
+    .index("by_status", ["status"]),
 
   // Login history for security tab - populated by Clerk webhooks
   loginHistory: defineTable({
