@@ -30,4 +30,21 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   }),
+
+  // Login history for security tab - populated by Clerk webhooks
+  loginHistory: defineTable({
+    clerkUserId: v.string(),
+    sessionId: v.string(),
+    event: v.union(v.literal("login"), v.literal("logout")),
+    deviceType: v.optional(v.string()),
+    browserName: v.optional(v.string()),
+    browserVersion: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+    city: v.optional(v.string()),
+    country: v.optional(v.string()),
+    isMobile: v.optional(v.boolean()),
+    timestamp: v.number(),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_session", ["sessionId"]),
 });

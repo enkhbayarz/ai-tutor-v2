@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as http from "../http.js";
+import type * as loginHistory from "../loginHistory.js";
 import type * as migrations from "../migrations.js";
 import type * as teachers from "../teachers.js";
 import type * as users from "../users.js";
@@ -19,6 +21,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  http: typeof http;
+  loginHistory: typeof loginHistory;
   migrations: typeof migrations;
   teachers: typeof teachers;
   users: typeof users;

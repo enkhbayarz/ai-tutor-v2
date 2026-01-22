@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useUser, useReverification } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -40,6 +40,7 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
   const t = useTranslations("helpDialog");
   const convexUser = useQuery(api.users.getCurrentUser);
   const updateProfile = useMutation(api.users.updateProfile);
+  const loginHistory = useQuery(api.loginHistory.getLoginHistory);
 
   const [activeTab, setActiveTab] = useState<TabType>("profile");
 
@@ -60,32 +61,6 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-
-  // Sessions state - Type inferred from Clerk's getSessions return value
-  type ClerkSession = Awaited<ReturnType<NonNullable<typeof clerkUser>["getSessions"]>>[number];
-  const [sessions, setSessions] = useState<ClerkSession[]>([]);
-  const [sessionsLoading, setSessionsLoading] = useState(false);
-
-  // Fetch sessions when security tab is active
-  const fetchSessions = useCallback(async () => {
-    if (!clerkUser) return;
-
-    setSessionsLoading(true);
-    try {
-      const userSessions = await clerkUser.getSessions();
-      setSessions(userSessions || []);
-    } catch (error) {
-      console.error("Failed to fetch sessions", error);
-    } finally {
-      setSessionsLoading(false);
-    }
-  }, [clerkUser]);
-
-  useEffect(() => {
-    if (activeTab === "security" && clerkUser) {
-      fetchSessions();
-    }
-  }, [activeTab, clerkUser, fetchSessions]);
 
   // Password validation
   const passwordChecks = {
@@ -169,20 +144,6 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
     { id: "password" as TabType, label: t("tabs.password"), icon: Lock },
     { id: "security" as TabType, label: t("tabs.security"), icon: Shield },
   ];
-
-  // Helper to format session info
-  const getSessionInfo = (session: ClerkSession) => {
-    const activity = session.latestActivity;
-    const device = activity?.deviceType || "Unknown Device";
-    const browser = activity?.browserName || "";
-    const deviceLabel = browser ? `${device} - ${browser}` : device;
-
-    const city = activity?.city || "";
-    const country = activity?.country || "";
-    const location = [city, country].filter(Boolean).join(", ") || "Unknown Location";
-
-    return { deviceLabel, location };
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -446,39 +407,45 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
                   </div>
 
                   <div className="space-y-3">
-                    {sessionsLoading ? (
+                    {loginHistory === undefined ? (
                       <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                         <span className="ml-2 text-gray-500">{t("security.loading")}</span>
                       </div>
-                    ) : sessions.length === 0 ? (
+                    ) : loginHistory.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         {t("security.noSessions")}
                       </div>
                     ) : (
-                      sessions.map((session) => {
-                        const { deviceLabel, location } = getSessionInfo(session);
-                        const isActive = session.status === "active";
-                        const lastActive = new Date(session.lastActiveAt).toLocaleString();
+                      loginHistory.map((entry) => {
+                        const deviceLabel = entry.deviceType || "Unknown Device";
+                        const browserLabel = entry.browserName ? ` - ${entry.browserName}` : "";
+                        const location = [entry.city, entry.country].filter(Boolean).join(", ") || "Unknown Location";
+                        const timestamp = new Date(entry.timestamp).toLocaleString();
 
                         return (
                           <div
-                            key={session.id}
+                            key={entry._id}
                             className="flex items-start gap-3 p-3 border rounded-lg"
                           >
                             <Monitor className="w-5 h-5 text-gray-400 mt-0.5" />
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium">{deviceLabel}</span>
-                                {isActive && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                <span className="font-medium">{deviceLabel}{browserLabel}</span>
+                                <span className={cn(
+                                  "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                                  entry.event === "login"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-gray-100 text-gray-600"
+                                )}>
+                                  {entry.event === "login" && (
                                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
-                                    {t("security.active")}
-                                  </span>
-                                )}
+                                  )}
+                                  {entry.event === "login" ? t("security.login") : t("security.logout")}
+                                </span>
                               </div>
                               <p className="text-sm text-gray-500">
-                                {location} • {lastActive}
+                                {location} • {timestamp}
                               </p>
                             </div>
                           </div>

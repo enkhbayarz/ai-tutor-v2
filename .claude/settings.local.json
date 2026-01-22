@@ -6,7 +6,8 @@
       "WebFetch(domain:posthog.com)",
       "WebFetch(domain:docs.convex.dev)",
       "WebFetch(domain:clerk.com)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebSearch"
     ]
   }
 }
