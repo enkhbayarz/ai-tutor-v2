@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -29,6 +29,23 @@ import {
   GRADE_OPTIONS,
   getYearOptions,
 } from "@/lib/validations/textbook";
+import { useFormDraft } from "@/hooks/use-form-draft";
+
+interface TextbookDraft {
+  formData: Partial<TextbookFormData>;
+  pdfFileId: string | null;
+  pdfFileName: string | null;
+  thumbnailId: string | null;
+  thumbnailPreviewUrl: string | null;
+}
+
+const initialDraft: TextbookDraft = {
+  formData: {},
+  pdfFileId: null,
+  pdfFileName: null,
+  thumbnailId: null,
+  thumbnailPreviewUrl: null,
+};
 
 export default function AddTextbookPage() {
   const t = useTranslations("textbooks");
@@ -36,11 +53,17 @@ export default function AddTextbookPage() {
   const locale = useLocale();
   const router = useRouter();
 
-  const [formData, setFormData] = useState<Partial<TextbookFormData>>({});
-  const [pdfFileId, setPdfFileId] = useState<Id<"_storage"> | null>(null);
-  const [thumbnailId, setThumbnailId] = useState<Id<"_storage"> | null>(null);
+  const [draft, setDraft, clearDraft, isHydrated] = useFormDraft<TextbookDraft>(
+    "textbook-new-draft",
+    initialDraft
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Extract values from draft
+  const formData = draft.formData;
+  const pdfFileId = draft.pdfFileId as Id<"_storage"> | null;
+  const thumbnailId = draft.thumbnailId as Id<"_storage"> | null;
 
   const createTextbook = useMutation(api.textbooks.create);
   const deleteFile = useMutation(api.textbooks.deleteFile);
@@ -48,7 +71,10 @@ export default function AddTextbookPage() {
   const yearOptions = getYearOptions();
 
   const handleFieldChange = (field: keyof TextbookFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setDraft((prev) => ({
+      ...prev,
+      formData: { ...prev.formData, [field]: value },
+    }));
     // Clear error when field changes
     if (errors[field]) {
       setErrors((prev) => {
@@ -57,6 +83,26 @@ export default function AddTextbookPage() {
         return newErrors;
       });
     }
+  };
+
+  const handlePdfUpload = (storageId: Id<"_storage">, fileName: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      pdfFileId: storageId,
+      pdfFileName: fileName,
+    }));
+  };
+
+  const handleThumbnailUpload = (
+    storageId: Id<"_storage">,
+    fileName: string,
+    previewUrl?: string
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      thumbnailId: storageId,
+      thumbnailPreviewUrl: previewUrl || null,
+    }));
   };
 
   const validate = (): boolean => {
@@ -108,6 +154,7 @@ export default function AddTextbookPage() {
         notes: formData.notes || undefined,
       });
 
+      clearDraft();
       toast.success(tForm("success"));
       router.push(`/${locale}/textbook`);
     } catch (error) {
@@ -126,7 +173,7 @@ export default function AddTextbookPage() {
         console.error("Error deleting PDF:", error);
       }
     }
-    setPdfFileId(null);
+    setDraft((prev) => ({ ...prev, pdfFileId: null, pdfFileName: null }));
   };
 
   const handleThumbnailRemove = async () => {
@@ -137,7 +184,7 @@ export default function AddTextbookPage() {
         console.error("Error deleting thumbnail:", error);
       }
     }
-    setThumbnailId(null);
+    setDraft((prev) => ({ ...prev, thumbnailId: null, thumbnailPreviewUrl: null }));
   };
 
   const isFormValid =
@@ -148,6 +195,15 @@ export default function AddTextbookPage() {
     formData.isValid &&
     pdfFileId &&
     thumbnailId;
+
+  // Show loading while hydrating from sessionStorage
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -311,13 +367,18 @@ export default function AddTextbookPage() {
               accept={FILE_LIMITS.pdf.accept}
               maxSize={FILE_LIMITS.pdf.maxSize}
               mimeTypes={FILE_LIMITS.pdf.mimeTypes}
-              onUpload={setPdfFileId}
+              onUpload={handlePdfUpload}
               onRemove={handlePdfRemove}
               label={tForm("pdfFile")}
               hint={tForm("uploadHint")}
               maxSizeLabel={tForm("maxSize", { size: "50MB" })}
               error={errors.pdf}
               variant="pdf"
+              value={{
+                storageId: draft.pdfFileId,
+                fileName: draft.pdfFileName,
+                previewUrl: null,
+              }}
             />
           </div>
         </div>
@@ -330,13 +391,18 @@ export default function AddTextbookPage() {
               accept={FILE_LIMITS.thumbnail.accept}
               maxSize={FILE_LIMITS.thumbnail.maxSize}
               mimeTypes={FILE_LIMITS.thumbnail.mimeTypes}
-              onUpload={setThumbnailId}
+              onUpload={handleThumbnailUpload}
               onRemove={handleThumbnailRemove}
               label={tForm("thumbnail")}
               hint={tForm("uploadHint")}
               maxSizeLabel={tForm("maxSize", { size: "200KB" })}
               error={errors.thumbnail}
               variant="image"
+              value={{
+                storageId: draft.thumbnailId,
+                fileName: null,
+                previewUrl: draft.thumbnailPreviewUrl,
+              }}
             />
           </div>
 

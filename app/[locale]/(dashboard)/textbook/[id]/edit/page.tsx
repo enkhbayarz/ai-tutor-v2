@@ -359,7 +359,7 @@ export default function EditTextbookPage() {
               accept={FILE_LIMITS.pdf.accept}
               maxSize={FILE_LIMITS.pdf.maxSize}
               mimeTypes={FILE_LIMITS.pdf.mimeTypes}
-              onUpload={setPdfFileId}
+              onUpload={(id) => setPdfFileId(id)}
               onRemove={handlePdfRemove}
               existingUrl={textbook.pdfUrl}
               existingName={`${t(`subjects.${textbook.subjectName}`)} ${textbook.grade}.pdf`}
@@ -380,7 +380,7 @@ export default function EditTextbookPage() {
               accept={FILE_LIMITS.thumbnail.accept}
               maxSize={FILE_LIMITS.thumbnail.maxSize}
               mimeTypes={FILE_LIMITS.thumbnail.mimeTypes}
-              onUpload={setThumbnailId}
+              onUpload={(id) => setThumbnailId(id)}
               onRemove={handleThumbnailRemove}
               existingUrl={textbook.thumbnailUrl}
               label={tForm("thumbnail")}

@@ -11,7 +11,7 @@ interface FileUploadProps {
   accept: string;
   maxSize: number;
   mimeTypes: readonly string[];
-  onUpload: (storageId: Id<"_storage">) => void;
+  onUpload: (storageId: Id<"_storage">, fileName: string, previewUrl?: string) => void;
   onRemove?: () => void;
   existingUrl?: string | null;
   existingName?: string;
@@ -20,6 +20,12 @@ interface FileUploadProps {
   maxSizeLabel: string;
   error?: string;
   variant?: "pdf" | "image";
+  // Controlled mode - restore from draft
+  value?: {
+    storageId: string | null;
+    fileName: string | null;
+    previewUrl: string | null;
+  };
 }
 
 export function FileUpload({
@@ -35,6 +41,7 @@ export function FileUpload({
   maxSizeLabel,
   error,
   variant = "pdf",
+  value,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -42,6 +49,10 @@ export function FileUpload({
   const [fileName, setFileName] = useState<string | null>(existingName || null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingUrl || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Sync with controlled value prop (for draft restoration)
+  const displayFileName = value?.fileName ?? fileName;
+  const displayPreviewUrl = value?.previewUrl ?? previewUrl;
 
   const generateUploadUrl = useMutation(api.textbooks.generateUploadUrl);
 
@@ -101,14 +112,21 @@ export function FileUpload({
         const storageId = response.storageId as Id<"_storage">;
 
         // Set preview for images
+        let imagePreviewUrl: string | undefined;
         if (variant === "image") {
-          const reader = new FileReader();
-          reader.onload = (e) => setPreviewUrl(e.target?.result as string);
-          reader.readAsDataURL(file);
+          imagePreviewUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const result = e.target?.result as string;
+              setPreviewUrl(result);
+              resolve(result);
+            };
+            reader.readAsDataURL(file);
+          });
         }
 
         setFileName(file.name);
-        onUpload(storageId);
+        onUpload(storageId, file.name, imagePreviewUrl);
       } catch (err) {
         console.error("Upload error:", err);
         setUploadError("error");
@@ -163,7 +181,7 @@ export function FileUpload({
       <label className="text-sm font-medium text-gray-700">{label}</label>
 
       {/* Upload area or preview */}
-      {!fileName && !previewUrl ? (
+      {!displayFileName && !displayPreviewUrl ? (
         <div
           className={cn(
             "relative border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer",
@@ -212,11 +230,11 @@ export function FileUpload({
             )}
           </div>
         </div>
-      ) : variant === "image" && previewUrl ? (
+      ) : variant === "image" && displayPreviewUrl ? (
         // Image preview
         <div className="relative rounded-lg overflow-hidden border border-gray-200">
           <img
-            src={previewUrl}
+            src={displayPreviewUrl}
             alt="Thumbnail preview"
             className="w-full h-48 object-cover"
           />
@@ -235,7 +253,7 @@ export function FileUpload({
             <FileText className="w-5 h-5 text-red-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{fileName}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{displayFileName}</p>
             {isUploading && (
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
