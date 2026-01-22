@@ -3,7 +3,9 @@
     "allow": [
       "Bash(bunx shadcn@latest add:*)",
       "Bash(cat:*)",
-      "WebFetch(domain:posthog.com)"
+      "WebFetch(domain:posthog.com)",
+      "WebFetch(domain:docs.convex.dev)",
+      "WebFetch(domain:clerk.com)"
     ]
   }
 }

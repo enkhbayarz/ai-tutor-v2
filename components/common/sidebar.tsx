@@ -6,7 +6,16 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
-import { Users, GraduationCap, BookOpen, PanelLeft } from "lucide-react";
+import {
+  Users,
+  GraduationCap,
+  BookOpen,
+  PanelLeft,
+  Settings,
+  HelpCircle,
+  LogOut,
+} from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,6 +24,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const navItems = [
   { href: "/teacher-info", icon: Users, labelKey: "teachers" },
@@ -125,26 +141,79 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* User Info */}
-        <div className={cn("mt-auto pt-4", expanded && "w-full")}>
-          <div className={cn("flex items-center", expanded && "gap-3")}>
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
-              <AvatarFallback>
-                {user?.firstName?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
-            {expanded && (
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">
-                  {user?.fullName || tCommon("defaultManager")}
-                </p>
-                <p className="text-sm text-gray-500 truncate">
-                  {user?.primaryEmailAddress?.emailAddress || tCommon("defaultEmail")}
-                </p>
+        {/* User Info with Dropdown */}
+        <div className={cn("mt-auto pt-4 px-2", expanded && "w-full")}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors",
+                  expanded ? "gap-3 w-full" : "justify-center"
+                )}
+              >
+                <Avatar className="w-10 h-10">
+                  <AvatarImage
+                    src={user?.imageUrl}
+                    alt={user?.fullName || "User"}
+                  />
+                  <AvatarFallback>
+                    {user?.firstName?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                {expanded && (
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="font-medium text-gray-900 truncate">
+                      {user?.fullName || tCommon("defaultManager")}
+                    </p>
+                    <p className="text-sm text-gray-500 truncate">
+                      {user?.primaryEmailAddress?.emailAddress ||
+                        tCommon("defaultEmail")}
+                    </p>
+                  </div>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-56 ml-2">
+              {/* User Header */}
+              <div className="flex items-center gap-3 p-3">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage
+                    src={user?.imageUrl}
+                    alt={user?.fullName || "User"}
+                  />
+                  <AvatarFallback>
+                    {user?.firstName?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">
+                    {user?.fullName || tCommon("defaultManager")}
+                  </p>
+                  <p className="text-sm text-gray-500 truncate">
+                    {user?.primaryEmailAddress?.emailAddress ||
+                      tCommon("defaultEmail")}
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
+              <DropdownMenuSeparator />
+              {/* Menu Items */}
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="w-4 h-4" />
+                {t("settings")}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <HelpCircle className="w-4 h-4" />
+                {t("help")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <SignOutButton redirectUrl={`/${locale}/sign-in`}>
+                <DropdownMenuItem className="cursor-pointer">
+                  <LogOut className="w-4 h-4" />
+                  {t("logout")}
+                </DropdownMenuItem>
+              </SignOutButton>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
     </TooltipProvider>

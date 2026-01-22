@@ -5,7 +5,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
-import { X } from "lucide-react";
+import { X, Settings, HelpCircle, LogOut } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { navItems } from "./sidebar";
 
 interface MobileSidebarProps {
@@ -82,24 +90,72 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
             })}
           </nav>
 
-          {/* User Info */}
+          {/* User Info with Dropdown */}
           <div className="p-4 border-t">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
-                <AvatarFallback>
-                  {user?.firstName?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">
-                  {user?.fullName || tCommon("defaultManager")}
-                </p>
-                <p className="text-sm text-gray-500 truncate">
-                  {user?.primaryEmailAddress?.emailAddress || tCommon("defaultEmail")}
-                </p>
-              </div>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 w-full cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage
+                      src={user?.imageUrl}
+                      alt={user?.fullName || "User"}
+                    />
+                    <AvatarFallback>
+                      {user?.firstName?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="font-medium text-gray-900 truncate">
+                      {user?.fullName || tCommon("defaultManager")}
+                    </p>
+                    <p className="text-sm text-gray-500 truncate">
+                      {user?.primaryEmailAddress?.emailAddress ||
+                        tCommon("defaultEmail")}
+                    </p>
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top" className="w-56">
+                {/* User Header */}
+                <div className="flex items-center gap-3 p-3">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage
+                      src={user?.imageUrl}
+                      alt={user?.fullName || "User"}
+                    />
+                    <AvatarFallback>
+                      {user?.firstName?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">
+                      {user?.fullName || tCommon("defaultManager")}
+                    </p>
+                    <p className="text-sm text-gray-500 truncate">
+                      {user?.primaryEmailAddress?.emailAddress ||
+                        tCommon("defaultEmail")}
+                    </p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                {/* Menu Items */}
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="w-4 h-4" />
+                  {t("settings")}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <HelpCircle className="w-4 h-4" />
+                  {t("help")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <SignOutButton redirectUrl={`/${locale}/sign-in`}>
+                  <DropdownMenuItem className="cursor-pointer">
+                    <LogOut className="w-4 h-4" />
+                    {t("logout")}
+                  </DropdownMenuItem>
+                </SignOutButton>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </SheetContent>

@@ -5,29 +5,14 @@ This file provides guidance for agentic coding assistants working in this reposi
 ## Development Commands
 
 ```bash
-# Start development server
-bun run dev
-
-# Build for production
-bun run build
-
-# Start production server
-bun run start
-
-# Run ESLint
-bun run lint
-
-# Install dependencies
-bun install
-
-# Add shadcn/ui component
-bunx shadcn@latest add [component-name]
-
-# Run all tests (add Jest/Vitest when needed)
-bun test
-
-# Run a single test file
-bun test path/to/test.test.ts
+bun run dev          # Start dev server
+bun run build        # Build for production
+bun run start        # Start production server
+bun run lint         # Run ESLint
+bun install          # Install dependencies
+bunx shadcn@latest add [component-name]  # Add shadcn/ui component
+bun test             # Run all tests (when added)
+bun test path/to/test.test.ts  # Run single test file
 ```
 
 ## Tech Stack
@@ -49,26 +34,29 @@ bun test path/to/test.test.ts
 | Hooks | `use-[name].ts` | `use-debounce.ts` |
 | Server Actions | `[verb]-[noun].ts` | `create-teacher.ts` |
 | Route Groups | `([name])/` | `(dashboard)/` |
+| Private Folders | `_[name]/` | `_components/` |
 
 ### Import Style
 
 ```typescript
-// External dependencies
-import { useState } from "react";
-import { redirect } from "next/navigation";
+// 1. React/Node builtins
+import { useState, useEffect } from "react";
 
-// Third-party components
-import { Button } from "@/components/ui/button";
-import { Trash2, Pencil } from "lucide-react";
+// 2. External packages
+import { z } from "zod";
 
-// Local components
-import { TeacherTable } from "@/components/teachers/teacher-table";
-
-// Utilities
+// 3. Internal aliases (@/)
+import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
+
+// 4. Parent imports (../)
+import { DashboardLayout } from "../_components/layout";
+
+// 5. Sibling imports (./)
+import { StudentForm } from "./_components/student-form";
 ```
 
-Always use `@/` path aliases for internal imports.
+Use barrel exports only for `@/components/ui`. Direct imports elsewhere.
 
 ### TypeScript
 
@@ -77,33 +65,11 @@ Always use `@/` path aliases for internal imports.
 - Use explicit types for function parameters and returns
 - Use `React.ComponentProps` when extending HTML element props
 
-```typescript
-interface TeacherTableProps {
-  teachers: Teacher[];
-  currentPage: number;
-  onPageChange: (page: number) => void;
-}
-
-export function TeacherTable({ teachers, currentPage, onPageChange }: TeacherTableProps) {
-  // ...
-}
-```
-
 ### Component Patterns
 
-**Pages:** Use default export, server components by default (no "use client" directive), add "use client" only when using hooks or browser APIs.
+**Pages:** Default export, server components by default (no "use client"), add "use client" only for hooks/browser APIs.
 
-**Reusable Components:** Use named exports, define props interface, support className prop using cn() helper.
-
-```typescript
-interface ComponentProps {
-  className?: string;
-}
-
-export function MyComponent({ className, ...props }: ComponentProps) {
-  return <div className={cn("base-classes", className)} {...props} />
-}
-```
+**Reusable Components:** Named exports, define props interface, support className prop with cn(). Route-specific: use `_components/` in route folder. Global shared (3+ uses): use `components/common/`.
 
 ### Styling Guidelines
 
@@ -111,6 +77,7 @@ export function MyComponent({ className, ...props }: ComponentProps) {
 - Mobile-first: start with mobile styles, add `md:`, `lg:` breakpoints
 - Use `cn()` helper from `@/lib/utils` for conditional classes
 - Dark mode: use `dark:` prefix for dark theme variants
+- Use class-variance-authority (CVA) for component variants
 
 ```typescript
 <div className={cn("base-class", isActive && "active-class")} />
@@ -121,12 +88,38 @@ export function MyComponent({ className, ...props }: ComponentProps) {
 ```
 app/                    # Next.js App Router pages only
 components/
-├── ui/                 # shadcn components
-├── teachers/           # Feature-specific components
-└── common/             # Shared components
+├── ui/                 # shadcn components (barrel export only)
+├── common/             # Shared components (3+ uses)
+└── teachers/           # Feature-specific components
 actions/                # Server actions
 hooks/                  # Custom hooks
 lib/                    # Pure utilities (no React)
+```
+
+Route-specific: use `_components/`, `_actions/`, `_hooks/` in route folders.
+
+### Server Actions
+
+Use Zod validation and return consistent `ActionResult<T>` type:
+
+```typescript
+"use server";
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+
+const schema = z.object({ name: z.string().min(2) });
+type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
+
+export async function createTeacher(formData: FormData): Promise<ActionResult<{ id: string }>> {
+  try {
+    const parsed = schema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return { success: false, error: parsed.error.errors[0].message };
+    revalidatePath("/teachers");
+    return { success: true, data: { id: "123" } };
+  } catch {
+    return { success: false, error: "Алдаа гарлаа" };
+  }
+}
 ```
 
 ### Error Handling
@@ -134,6 +127,7 @@ lib/                    # Pure utilities (no React)
 - Use try-catch for async operations
 - Show user-friendly errors with Sonner toasts
 - Never expose sensitive data in error messages
+- Use Mongolian text for user-facing errors
 
 ### Authentication
 
