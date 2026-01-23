@@ -13,6 +13,7 @@ import type * as http from "../http.js";
 import type * as loginHistory from "../loginHistory.js";
 import type * as messages from "../messages.js";
 import type * as migrations from "../migrations.js";
+import type * as recentTextbooks from "../recentTextbooks.js";
 import type * as students from "../students.js";
 import type * as teachers from "../teachers.js";
 import type * as textbooks from "../textbooks.js";
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   loginHistory: typeof loginHistory;
   messages: typeof messages;
   migrations: typeof migrations;
+  recentTextbooks: typeof recentTextbooks;
   students: typeof students;
   teachers: typeof teachers;
   textbooks: typeof textbooks;

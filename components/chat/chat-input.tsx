@@ -20,6 +20,8 @@ interface ChatInputProps {
   model: ModelType;
   onModelChange: (model: ModelType) => void;
   disabled?: boolean;
+  value?: string;
+  onValueChange?: (value: string) => void;
 }
 
 const MODEL_LABELS: Record<ModelType, string> = {
@@ -32,14 +34,19 @@ export function ChatInput({
   model,
   onModelChange,
   disabled,
+  value,
+  onValueChange,
 }: ChatInputProps) {
   const t = useTranslations("chat");
-  const [message, setMessage] = useState("");
+  const [internalMessage, setInternalMessage] = useState("");
+  const message = value !== undefined ? value : internalMessage;
+  const setMessage = onValueChange || setInternalMessage;
   const [modelOpen, setModelOpen] = useState(false);
 
   const handleTranscript = useCallback((text: string) => {
-    setMessage((prev) => (prev ? prev + " " + text : text));
-  }, []);
+    const current = value !== undefined ? value : internalMessage;
+    setMessage(current ? current + " " + text : text);
+  }, [value, internalMessage, setMessage]);
 
   const { isRecording, isProcessing, audioLevel, hasSpoken, startRecording, stopRecording } =
     useVoiceInput(handleTranscript);

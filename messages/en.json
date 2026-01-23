@@ -377,6 +377,14 @@
     "minutesAgo": "{count} min",
     "hoursAgo": "{count}h",
     "daysAgo": "{count}d",
+    "quickAction": "Quick action",
+    "recentTextbooks": "Recently used textbooks",
+    "allTextbooksList": "All textbooks",
+    "chapterLessons": "{count} Chapter lessons",
+    "howCanIHelp": "How can I help you?",
+    "prepareTest": "Prepare a test",
+    "lessonPlan": "Create lesson plan",
+    "exercise": "Exercise",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

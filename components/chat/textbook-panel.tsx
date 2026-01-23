@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
-import { ChevronLeft, BookOpen } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
+import { BookOpen, X } from "lucide-react";
 import { TextbookCard } from "./textbook-card";
 
 interface TextbookPanelProps {
   onCollapse: () => void;
+  onTextbookClick: (id: Id<"textbooks">) => void;
 }
 
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-export function TextbookPanel({ onCollapse }: TextbookPanelProps) {
+export function TextbookPanel({ onCollapse, onTextbookClick }: TextbookPanelProps) {
+  const { user } = useUser();
   const t = useTranslations("chat");
   const [grade, setGrade] = useState<number | undefined>(undefined);
   const [subject, setSubject] = useState<string | undefined>(undefined);
@@ -26,23 +30,29 @@ export function TextbookPanel({ onCollapse }: TextbookPanelProps) {
   // Get unique subjects from results for the filter
   const allTextbooks = useQuery(api.textbooks.listActive, {});
   const subjects = Array.from(
-    new Set((allTextbooks || []).map((t) => t.subjectName))
+    new Set((allTextbooks || []).map((tb) => tb.subjectName))
+  );
+
+  // Recent textbooks
+  const recentTextbooks = useQuery(
+    api.recentTextbooks.listRecent,
+    user?.id ? { clerkUserId: user.id } : "skip"
   );
 
   return (
     <div className="flex h-full w-72 flex-col border-l bg-white">
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-4 py-3">
+        <BookOpen className="h-4 w-4 text-purple-500" />
+        <span className="flex-1 text-sm font-medium text-gray-800">
+          {t("textbooks")}
+        </span>
         <button
           onClick={onCollapse}
           className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100"
         >
-          <ChevronLeft className="h-4 w-4 text-gray-500" />
+          <X className="h-4 w-4 text-gray-400" />
         </button>
-        <BookOpen className="h-4 w-4 text-blue-500" />
-        <span className="text-sm font-medium text-gray-800">
-          {t("textbooks")}
-        </span>
       </div>
 
       {/* Filters */}
@@ -77,8 +87,34 @@ export function TextbookPanel({ onCollapse }: TextbookPanelProps) {
         </select>
       </div>
 
-      {/* Grid */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto p-3">
+        {/* Recent textbooks section */}
+        {recentTextbooks && recentTextbooks.length > 0 && (
+          <div className="mb-4">
+            <h4 className="mb-2 text-xs font-semibold text-gray-800">
+              {t("recentTextbooks")}
+            </h4>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {recentTextbooks.map((tb) => (
+                <div key={tb._id} className="w-24 shrink-0">
+                  <TextbookCard
+                    subjectName={tb.subjectName}
+                    grade={tb.grade}
+                    thumbnailUrl={tb.thumbnailUrl}
+                    onClick={() => onTextbookClick(tb._id)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All textbooks section */}
+        <h4 className="mb-2 text-xs font-semibold text-gray-800">
+          {t("allTextbooksList")}
+        </h4>
+
         {!textbooks ? (
           <div className="flex h-32 items-center justify-center">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
@@ -96,6 +132,7 @@ export function TextbookPanel({ onCollapse }: TextbookPanelProps) {
                 subjectName={tb.subjectName}
                 grade={tb.grade}
                 thumbnailUrl={tb.thumbnailUrl}
+                onClick={() => onTextbookClick(tb._id)}
               />
             ))}
           </div>

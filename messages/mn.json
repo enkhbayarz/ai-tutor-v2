@@ -377,6 +377,14 @@
     "minutesAgo": "{count} мин",
     "hoursAgo": "{count} цаг",
     "daysAgo": "{count} өдөр",
+    "quickAction": "Үйлдэл",
+    "recentTextbooks": "Сүүлд ашигласан сурах бичгүүд",
+    "allTextbooksList": "Бүх сурах бичиг",
+    "chapterLessons": "{count} Бүлэг хичээл",
+    "howCanIHelp": "Танд хэрхэн туслах уу?",
+    "prepareTest": "Тест бэлдээд өгөөч",
+    "lessonPlan": "Хичээлийн төлөвлөгөө гарга",
+    "exercise": "Дасгал ажил",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

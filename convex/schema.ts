@@ -137,4 +137,13 @@ export default defineSchema({
   })
     .index("by_clerk_user", ["clerkUserId"])
     .index("by_session", ["sessionId"]),
+
+  // Recently viewed textbooks per user (max 3, FIFO)
+  recentTextbooks: defineTable({
+    clerkUserId: v.string(),
+    textbookId: v.id("textbooks"),
+    viewedAt: v.number(),
+  })
+    .index("by_user", ["clerkUserId"])
+    .index("by_user_textbook", ["clerkUserId", "textbookId"]),
 });
