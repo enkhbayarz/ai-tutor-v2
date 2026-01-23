@@ -27,6 +27,48 @@ export const list = query({
   },
 });
 
+// List active textbooks with optional grade/subject filters (for chat panel)
+export const listActive = query({
+  args: {
+    grade: v.optional(v.number()),
+    subject: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let textbooks;
+
+    if (args.grade) {
+      textbooks = await ctx.db
+        .query("textbooks")
+        .withIndex("by_grade", (q) => q.eq("grade", args.grade!))
+        .collect();
+    } else {
+      textbooks = await ctx.db.query("textbooks").collect();
+    }
+
+    // Filter out deleted and apply subject filter
+    textbooks = textbooks.filter((t) => {
+      if (t.status === "deleted") return false;
+      if (args.subject && t.subjectName !== args.subject) return false;
+      return true;
+    });
+
+    // Get thumbnail URLs
+    const results = await Promise.all(
+      textbooks.map(async (t) => {
+        const thumbnailUrl = await ctx.storage.getUrl(t.thumbnailId);
+        return {
+          _id: t._id,
+          subjectName: t.subjectName,
+          grade: t.grade,
+          thumbnailUrl,
+        };
+      })
+    );
+
+    return results;
+  },
+});
+
 // Get single textbook by ID
 export const getById = query({
   args: { id: v.id("textbooks") },
