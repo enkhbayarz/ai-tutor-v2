@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Send, ChevronDown } from "lucide-react";
+import { Mic, MicOff, Send, ChevronDown, Paperclip, X } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -22,6 +22,8 @@ interface ChatInputProps {
   disabled?: boolean;
   value?: string;
   onValueChange?: (value: string) => void;
+  imageFile?: File | null;
+  onImageChange?: (file: File | null) => void;
 }
 
 const MODEL_LABELS: Record<ModelType, string> = {
@@ -36,12 +38,16 @@ export function ChatInput({
   disabled,
   value,
   onValueChange,
+  imageFile,
+  onImageChange,
 }: ChatInputProps) {
   const t = useTranslations("chat");
   const [internalMessage, setInternalMessage] = useState("");
   const message = value !== undefined ? value : internalMessage;
   const setMessage = onValueChange || setInternalMessage;
   const [modelOpen, setModelOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleTranscript = useCallback((text: string) => {
     const current = value !== undefined ? value : internalMessage;
@@ -53,7 +59,7 @@ export function ChatInput({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || disabled) return;
+    if ((!message.trim() && !imageFile) || disabled) return;
     onSend?.(message.trim());
     setMessage("");
   };
@@ -66,8 +72,45 @@ export function ChatInput({
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      alert(t("imageTooLarge"));
+      return;
+    }
+
+    onImageChange?.(file);
+
+    // Generate preview
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setImagePreview(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveImage = () => {
+    onImageChange?.(null);
+    setImagePreview(null);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
       {/* Voice indicator */}
       {(isRecording || isProcessing) && (
         <div className="mb-2 flex justify-center">
@@ -76,6 +119,27 @@ export function ChatInput({
             hasSpoken={hasSpoken}
             isProcessing={isProcessing}
           />
+        </div>
+      )}
+
+      {/* Image preview */}
+      {imagePreview && imageFile && (
+        <div className="mb-2 flex items-start gap-2">
+          <div className="relative inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="h-20 w-20 rounded-lg border border-gray-200 object-cover"
+            />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-700 text-white hover:bg-gray-900"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -117,6 +181,18 @@ export function ChatInput({
           </PopoverContent>
         </Popover>
 
+        {/* Paperclip Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || isRecording}
+        >
+          <Paperclip className="h-4 w-4 text-gray-400" />
+        </Button>
+
         {/* Text Input */}
         <input
           type="text"
@@ -150,7 +226,7 @@ export function ChatInput({
         <Button
           type="submit"
           size="icon"
-          disabled={disabled || !message.trim() || isRecording}
+          disabled={disabled || (!message.trim() && !imageFile) || isRecording}
           className="h-8 w-8 shrink-0 rounded-full bg-blue-500 hover:bg-blue-600 disabled:opacity-30"
         >
           <Send className="h-4 w-4" />

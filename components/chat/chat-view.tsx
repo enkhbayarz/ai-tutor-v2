@@ -34,6 +34,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const [panelOpen, setPanelOpen] = useState(true);
   const [selectedTextbookId, setSelectedTextbookId] = useState<Id<"textbooks"> | null>(null);
   const [inputValue, setInputValue] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [reference, setReference] = useState<TextbookReference | null>(null);
   const conversationIdRef = useRef<Id<"conversations"> | null>(
     conversationId ?? null
@@ -45,6 +46,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const createConversation = useMutation(api.conversations.create);
   const touchConversation = useMutation(api.conversations.touch);
   const saveMessage = useMutation(api.messages.send);
+  const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
 
   // Load existing conversation data
   const conversation = useQuery(
@@ -65,6 +67,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
           id: m._id,
           role: m.role as "user" | "assistant",
           content: m.content,
+          imageUrl: m.imageUrl,
         }))
       );
     }
@@ -85,13 +88,32 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const handleSend = useCallback(
     async (content: string) => {
       if (!user?.id || isStreaming) return;
+      const currentImage = imageFile;
       setInputValue("");
+      setImageFile(null);
+
+      // Upload image to Convex if present
+      let imageStorageId: Id<"_storage"> | undefined;
+      let resolvedImageUrl: string | undefined;
+      if (currentImage) {
+        const uploadUrl = await generateUploadUrl();
+        const uploadResult = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": currentImage.type },
+          body: currentImage,
+        });
+        const { storageId } = await uploadResult.json();
+        imageStorageId = storageId;
+        // Create a local preview URL for immediate display
+        resolvedImageUrl = URL.createObjectURL(currentImage);
+      }
 
       // Add user message to local state
       const userMsg: Message = {
         id: `user-${Date.now()}`,
         role: "user",
         content,
+        imageUrl: resolvedImageUrl,
       };
       setMessages((prev) => [...prev, userMsg]);
 
@@ -109,12 +131,13 @@ export function ChatView({ conversationId }: ChatViewProps) {
         await touchConversation({ id: convId });
       }
 
-      // Save user message to Convex
+      // Save user message to Convex (with imageId if uploaded)
       await saveMessage({
         conversationId: convId,
         role: "user",
         content,
         model,
+        imageId: imageStorageId,
       });
 
       // Build messages array for API (only role + content)
@@ -128,7 +151,18 @@ export function ChatView({ conversationId }: ChatViewProps) {
         const textbookContext = reference
           ? buildTextbookContext(reference)
           : undefined;
-        const assistantContent = await sendMessage(apiMessages, model, textbookContext);
+
+        // Convert image to data URL for the API (works for both OpenAI and Gemini)
+        let apiImageUrl: string | undefined;
+        if (currentImage) {
+          const reader = new FileReader();
+          apiImageUrl = await new Promise<string>((resolve) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(currentImage);
+          });
+        }
+
+        const assistantContent = await sendMessage(apiMessages, model, textbookContext, apiImageUrl);
 
         if (assistantContent) {
           // Add assistant message to local state
@@ -156,8 +190,10 @@ export function ChatView({ conversationId }: ChatViewProps) {
       model,
       messages,
       isStreaming,
+      imageFile,
       reference,
       sendMessage,
+      generateUploadUrl,
       createConversation,
       touchConversation,
       saveMessage,
@@ -192,6 +228,8 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 disabled={isStreaming}
                 value={inputValue}
                 onValueChange={setInputValue}
+                imageFile={imageFile}
+                onImageChange={setImageFile}
               />
             </div>
           </>
@@ -216,6 +254,8 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 disabled={isStreaming}
                 value={inputValue}
                 onValueChange={setInputValue}
+                imageFile={imageFile}
+                onImageChange={setImageFile}
               />
             </div>
           </div>

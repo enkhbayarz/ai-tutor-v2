@@ -386,6 +386,8 @@
     "lessonPlan": "Хичээлийн төлөвлөгөө гарга",
     "exercise": "Дасгал ажил",
     "referencing": "Лавлаж байна",
+    "attachImage": "Зураг хавсаргах",
+    "imageTooLarge": "Зургийн хэмжээ 10MB-с хэтэрсэн байна",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

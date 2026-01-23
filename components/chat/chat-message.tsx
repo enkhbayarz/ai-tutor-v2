@@ -7,6 +7,7 @@ export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  imageUrl?: string | null;
 }
 
 interface ChatMessageProps {
@@ -37,7 +38,19 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
     return (
       <div className="flex justify-end">
         <div className="max-w-[80%] rounded-2xl bg-slate-800 px-4 py-2 text-white">
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          {message.imageUrl && (
+            <div className="mb-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={message.imageUrl}
+                alt="Uploaded"
+                className="max-h-48 rounded-lg object-contain"
+              />
+            </div>
+          )}
+          {message.content && (
+            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          )}
         </div>
       </div>
     );

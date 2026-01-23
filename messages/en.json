@@ -386,6 +386,8 @@
     "lessonPlan": "Create lesson plan",
     "exercise": "Exercise",
     "referencing": "Referencing",
+    "attachImage": "Attach image",
+    "imageTooLarge": "Image size exceeds 10MB",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

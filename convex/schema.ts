@@ -118,6 +118,7 @@ export default defineSchema({
     ),
     content: v.string(),
     model: v.optional(v.string()),
+    imageId: v.optional(v.id("_storage")),
     createdAt: v.number(),
   }).index("by_conversation", ["conversationId"]),
 
