@@ -30,18 +30,21 @@ interface HistoryPanelProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function formatRelativeDate(timestamp: number): string {
+function formatRelativeDate(
+  timestamp: number,
+  t: (key: string, values?: Record<string, string | number | Date>) => string
+): string {
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return "Дөнгөж сая";
-  if (minutes < 60) return `${minutes} мин`;
-  if (hours < 24) return `${hours} цаг`;
-  if (days < 7) return `${days} өдөр`;
-  return new Date(timestamp).toLocaleDateString("mn-MN");
+  if (minutes < 1) return t("justNow");
+  if (minutes < 60) return t("minutesAgo", { count: minutes });
+  if (hours < 24) return t("hoursAgo", { count: hours });
+  if (days < 7) return t("daysAgo", { count: days });
+  return new Date(timestamp).toLocaleDateString();
 }
 
 export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
@@ -104,7 +107,7 @@ export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] text-gray-400">
-                          {formatRelativeDate(conv.updatedAt)}
+                          {formatRelativeDate(conv.updatedAt, t)}
                         </span>
                         <span className="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">
                           {conv.model === "openai" ? "GPT" : "Gemini"}

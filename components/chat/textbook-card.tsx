@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface TextbookCardProps {
   subjectName: string;
@@ -15,6 +16,8 @@ export function TextbookCard({
   thumbnailUrl,
   onClick,
 }: TextbookCardProps) {
+  const t = useTranslations("chat");
+
   return (
     <button
       onClick={onClick}
@@ -39,7 +42,7 @@ export function TextbookCard({
       <div className="flex flex-col gap-1 p-2">
         <p className="text-xs font-medium text-gray-800 truncate">{subjectName}</p>
         <span className="inline-flex w-fit items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
-          {grade}-р анги
+          {t("gradeLabel", { grade })}
         </span>
       </div>
     </button>

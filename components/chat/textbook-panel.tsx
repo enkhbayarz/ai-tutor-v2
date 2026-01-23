@@ -57,7 +57,7 @@ export function TextbookPanel({ onCollapse }: TextbookPanelProps) {
           <option value="">{t("allGrades")}</option>
           {GRADES.map((g) => (
             <option key={g} value={g}>
-              {g}-р анги
+              {t("gradeLabel", { grade: g })}
             </option>
           ))}
         </select>

@@ -372,6 +372,11 @@
     "deleteChatConfirm": "\"{name}\" чатыг устгах уу?",
     "cancel": "Цуцлах",
     "listen": "Сонсох",
+    "gradeLabel": "{grade}-р анги",
+    "justNow": "Дөнгөж сая",
+    "minutesAgo": "{count} мин",
+    "hoursAgo": "{count} цаг",
+    "daysAgo": "{count} өдөр",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

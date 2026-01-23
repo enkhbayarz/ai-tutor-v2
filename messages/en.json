@@ -372,6 +372,11 @@
     "deleteChatConfirm": "Delete \"{name}\" chat?",
     "cancel": "Cancel",
     "listen": "Listen",
+    "gradeLabel": "Grade {grade}",
+    "justNow": "Just now",
+    "minutesAgo": "{count} min",
+    "hoursAgo": "{count}h",
+    "daysAgo": "{count}d",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"
