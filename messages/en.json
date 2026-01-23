@@ -352,5 +352,24 @@
       "login": "Logged in",
       "logout": "Logged out"
     }
+  },
+  "chat": {
+    "newChat": "New Chat",
+    "history": "History",
+    "greeting": "Good day!",
+    "question": "How can I help you?",
+    "inputPlaceholder": "Write here...",
+    "send": "Send",
+    "recording": "Speak now...",
+    "processing": "Processing...",
+    "copied": "Copied",
+    "textbooks": "Textbooks",
+    "noHistory": "No chat history",
+    "deleteChat": "Delete chat",
+    "deleteChatConfirm": "Delete \"{name}\" chat?",
+    "models": {
+      "openai": "GPT-4o",
+      "gemini": "Gemini"
+    }
   }
 }

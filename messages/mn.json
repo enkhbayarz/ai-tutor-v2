@@ -352,5 +352,24 @@
       "login": "Нэвтэрсэн",
       "logout": "Гарсан"
     }
+  },
+  "chat": {
+    "newChat": "Шинэ чат",
+    "history": "Түүх",
+    "greeting": "Өдрийн мэнд!",
+    "question": "Танд юугаар туслах вэ?",
+    "inputPlaceholder": "Энд бичээрэй...",
+    "send": "Илгээх",
+    "recording": "Ярина уу...",
+    "processing": "Боловсруулж байна...",
+    "copied": "Хуулагдлаа",
+    "textbooks": "Сурах бичиг",
+    "noHistory": "Чат түүх байхгүй",
+    "deleteChat": "Чат устгах",
+    "deleteChatConfirm": "\"{name}\" чатыг устгах уу?",
+    "models": {
+      "openai": "GPT-4o",
+      "gemini": "Gemini"
+    }
   }
 }
