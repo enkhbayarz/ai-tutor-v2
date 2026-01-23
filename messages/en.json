@@ -370,6 +370,8 @@
     "noHistory": "No chat history",
     "deleteChat": "Delete chat",
     "deleteChatConfirm": "Delete \"{name}\" chat?",
+    "cancel": "Cancel",
+    "listen": "Listen",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

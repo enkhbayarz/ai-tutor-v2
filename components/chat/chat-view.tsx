@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ChatWelcome } from "./chat-welcome";
@@ -12,18 +12,56 @@ import { Message } from "./chat-message";
 import { RightPanel } from "./right-panel";
 import { useChatStream } from "@/hooks/use-chat-stream";
 
-export function ChatView() {
+interface ChatViewProps {
+  conversationId?: Id<"conversations">;
+}
+
+export function ChatView({ conversationId }: ChatViewProps) {
   const { user } = useUser();
   const [model, setModel] = useState<ModelType>("openai");
   const [messages, setMessages] = useState<Message[]>([]);
   const [panelOpen, setPanelOpen] = useState(true);
-  const conversationIdRef = useRef<Id<"conversations"> | null>(null);
+  const conversationIdRef = useRef<Id<"conversations"> | null>(
+    conversationId ?? null
+  );
+  const loadedRef = useRef(false);
 
   const { sendMessage, isStreaming, streamingContent } = useChatStream();
 
   const createConversation = useMutation(api.conversations.create);
   const touchConversation = useMutation(api.conversations.touch);
   const saveMessage = useMutation(api.messages.send);
+
+  // Load existing conversation data
+  const conversation = useQuery(
+    api.conversations.get,
+    conversationId ? { id: conversationId } : "skip"
+  );
+  const loadedMessages = useQuery(
+    api.messages.list,
+    conversationId ? { conversationId } : "skip"
+  );
+
+  // Populate local state from loaded messages
+  useEffect(() => {
+    if (loadedMessages && !loadedRef.current) {
+      loadedRef.current = true;
+      setMessages(
+        loadedMessages.map((m) => ({
+          id: m._id,
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }))
+      );
+    }
+  }, [loadedMessages]);
+
+  // Set model from loaded conversation
+  useEffect(() => {
+    if (conversation?.model) {
+      setModel(conversation.model as ModelType);
+    }
+  }, [conversation?.model]);
 
   const handleSend = useCallback(
     async (content: string) => {

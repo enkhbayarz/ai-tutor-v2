@@ -370,6 +370,8 @@
     "noHistory": "Чат түүх байхгүй",
     "deleteChat": "Чат устгах",
     "deleteChatConfirm": "\"{name}\" чатыг устгах уу?",
+    "cancel": "Цуцлах",
+    "listen": "Сонсох",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

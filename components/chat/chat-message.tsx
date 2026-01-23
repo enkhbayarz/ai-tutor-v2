@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { MessageActions } from "./message-actions";
 
 export interface Message {
   id: string;
@@ -60,6 +61,7 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
             <span className="ml-0.5 inline-block h-4 w-2 animate-pulse bg-gray-400" />
           )}
         </div>
+        {!isStreaming && <MessageActions content={message.content} />}
       </div>
     </div>
   );

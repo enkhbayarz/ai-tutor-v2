@@ -31,11 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ProfileSettingsDialog } from "@/components/common/profile-settings-dialog";
 import { HelpDialog } from "@/components/common/help-dialog";
-
-const chatNavItems = [
-  { href: "/chat", icon: PenSquare, labelKey: "newChat" },
-  { href: "/chat/history", icon: Clock, labelKey: "history" },
-];
+import { HistoryPanel } from "./history-panel";
 
 export function ChatSidebar() {
   const { user } = useUser();
@@ -47,6 +43,7 @@ export function ChatSidebar() {
   const [showExpandIcon, setShowExpandIcon] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -95,42 +92,55 @@ export function ChatSidebar() {
 
         {/* Navigation */}
         <nav className={cn("flex-1 flex flex-col gap-2", expanded && "w-full")}>
-          {chatNavItems.map((item) => {
-            const localizedHref = `/${locale}${item.href}`;
-            const Icon = item.icon;
-            const label = t(item.labelKey);
+          {/* New Chat */}
+          {expanded ? (
+            <Link
+              href={`/${locale}/chat`}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
+            >
+              <PenSquare className="w-5 h-5" />
+              <span className="font-medium">{t("newChat")}</span>
+            </Link>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${locale}/chat`}
+                  className="flex items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <PenSquare className="w-5 h-5" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={12} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium">
+                {t("newChat")}
+              </TooltipContent>
+            </Tooltip>
+          )}
 
-            const navButton = (
-              <Link
-                key={item.href}
-                href={localizedHref}
-                className={cn(
-                  "flex items-center rounded-xl transition-colors cursor-pointer text-gray-400 hover:bg-gray-50 hover:text-gray-600",
-                  expanded ? "gap-3 px-4 py-3" : "justify-center w-12 h-12"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                {expanded && <span className="font-medium">{label}</span>}
-              </Link>
-            );
-
-            if (!expanded) {
-              return (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>{navButton}</TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    sideOffset={12}
-                    className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium"
-                  >
-                    {label}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            }
-
-            return <div key={item.href}>{navButton}</div>;
-          })}
+          {/* History */}
+          {expanded ? (
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
+            >
+              <Clock className="w-5 h-5" />
+              <span className="font-medium">{t("history")}</span>
+            </button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setHistoryOpen(true)}
+                  className="flex items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <Clock className="w-5 h-5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={12} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium">
+                {t("history")}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </nav>
 
         {/* User Profile */}
@@ -222,6 +232,7 @@ export function ChatSidebar() {
           onOpenChange={setSettingsOpen}
         />
         <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
+        <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} />
       </aside>
     </TooltipProvider>
   );
