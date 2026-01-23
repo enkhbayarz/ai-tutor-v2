@@ -1,6 +1,12 @@
 "use client";
 
-import { ChatSidebar } from "@/components/chat/chat-sidebar";
+import dynamic from "next/dynamic";
+
+const ChatSidebar = dynamic(
+  () =>
+    import("@/components/chat/chat-sidebar").then((mod) => mod.ChatSidebar),
+  { ssr: false }
+);
 
 export default function ChatLayout({
   children,
