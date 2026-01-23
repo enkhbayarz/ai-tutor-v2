@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**AI Tutor V2** - A Mongolian language educational AI tutoring platform for AI Academy Asia.
+**AI Tutor V2** - A Mongolian language educational AI tutoring platform for AI Academy Asia. Students can chat with an AI tutor that supports text, voice, and image inputs. Teachers/admins manage textbooks, students, and educational content.
 
 **Language**: Mongolian (Монгол хэл) as default, English fallback.
 
@@ -16,33 +16,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Framework      | Next.js 15 (App Router)             |
 | UI             | shadcn/ui (new-york) + Tailwind v4  |
 | Auth           | Clerk                               |
-| Backend        | Convex (planned)                    |
+| Backend/DB     | Convex (real-time, file storage)    |
+| i18n           | next-intl                           |
+| LLM (Text)    | OpenAI GPT-4o-mini / Google Gemini 2.0 Flash |
+| LLM (Vision)  | OpenAI GPT-4o / Google Gemini 2.0 Flash |
+| Audio STT      | Chimege API (Mongolian)             |
 | Theme          | next-themes                         |
-| i18n           | next-intl (planned)                 |
-| LLM            | OpenRouter                          |
 | Toast          | Sonner                              |
-| Error Tracking | Sentry (planned)                    |
+| Error Tracking | Sentry                              |
+| Analytics      | PostHog                             |
 
 ## Development Commands
 
 ```bash
-# Install dependencies
-bun install
-
-# Start dev server
-bun run dev
-
-# Build for production
-bun run build
-
-# Lint
-bun run lint
-
-# Add shadcn component
-bunx shadcn@latest add [component-name]
-
-# Start Convex dev (when setup)
-bunx convex dev
+bun install          # Install dependencies
+bun run dev          # Start dev server
+bun run build        # Build for production (TypeScript check)
+bun run lint         # Lint
+bunx convex dev      # Start Convex dev (syncs schema)
+bunx shadcn@latest add [component-name]  # Add shadcn component
 ```
 
 ## Architecture
@@ -50,112 +42,151 @@ bunx convex dev
 ### Route Groups (App Router)
 
 ```
-app/
-├── (auth)/          # Public auth pages (Clerk)
-│   └── sign-in/, sign-up/
-├── (dashboard)/     # Protected admin/teacher pages
-│   └── Has sidebar layout
-├── (chat)/          # AI chat interface
-│   └── Different layout, conversation sidebar
-└── api/             # API routes
-    ├── chat/        # OpenRouter streaming
-    └── webhooks/    # Clerk webhooks
+app/[locale]/
+├── (auth)/              # Public auth pages (Clerk)
+│   ├── sign-in/
+│   └── sign-up/
+├── (dashboard)/         # Protected admin/teacher pages (sidebar layout)
+│   ├── student-info/    # Student management
+│   ├── teacher-info/    # Teacher management
+│   └── textbook/        # Textbook CRUD (list, new, [id], [id]/edit)
+├── chat/                # AI chat interface (own layout)
+│   └── c/[id]/          # Specific conversation
+└── api/
+    ├── chat/            # Streaming LLM endpoint (OpenAI + Gemini)
+    ├── chimege/         # Mongolian STT
+    └── extract-pdf/     # PDF text extraction
 ```
 
 ### Project Structure
 
 ```
-app/                    # Next.js App Router pages only
+app/                    # Next.js App Router pages
 components/
-├── ui/                 # shadcn components
-├── chat/               # Chat-related components
-├── dashboard/          # Dashboard components
-└── common/             # Shared components (logo, theme-toggle, etc.)
-actions/                # All server actions
-hooks/                  # All custom hooks
-lib/                    # Pure utilities (no React)
-convex/                 # Convex backend (when setup)
+├── ui/                 # shadcn components (button, dialog, input, etc.)
+├── chat/               # Chat UI (input, messages, sidebar, panels, voice)
+├── textbook/           # Textbook management (upload, TOC editor, filters)
+├── shared/             # Reusable (data-table, delete-dialog, empty-state)
+├── common/             # Layout (sidebar, mobile-header, help-dialog)
+└── providers/          # Context providers (Convex, PostHog, Sentry)
+hooks/                  # Custom hooks (use-chat-stream, use-voice-input, use-form-draft)
+lib/                    # Utilities (cn, export-excel, toc-parser, validations/)
+convex/                 # Backend (schema, mutations, queries)
+messages/               # i18n (mn.json, en.json)
+i18n/                   # next-intl config
 ```
 
 ### User Roles
 
 - **Admin**: Full access to everything
-- **Teacher (Багш)**: Manage students, view analytics
+- **Teacher (Багш)**: Manage students, textbooks, view analytics
 - **Student (Сурагч)**: AI chat access only
+
+## Convex Schema
+
+```typescript
+users        // clerkId, email, displayName, role (admin|teacher|student)
+teachers     // lastName, firstName, grade, group, phone1, phone2, status
+students     // lastName, firstName, grade, group, phone1, phone2, status
+textbooks    // subjectName, grade, year, type, pdfFileId, thumbnailId,
+             // extractedText, textExtractionStatus, tableOfContents, tocExtractionStatus
+conversations // clerkUserId, title, model, createdAt, updatedAt
+messages     // conversationId, role, content, model, imageId, createdAt
+loginHistory // clerkUserId, sessionId, event, device/browser/location info
+recentTextbooks // clerkUserId, textbookId, viewedAt (FIFO max 3)
+```
+
+## Key Patterns
+
+**Convex Data Access:**
+```typescript
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+const data = useQuery(api.textbooks.list, { grade: 10 });
+const create = useMutation(api.textbooks.create);
+```
+
+**File Upload to Convex Storage:**
+```typescript
+const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
+const uploadUrl = await generateUploadUrl();
+const result = await fetch(uploadUrl, {
+  method: "POST",
+  headers: { "Content-Type": file.type },
+  body: file,
+});
+const { storageId } = await result.json();
+```
+
+**Streaming Chat (hook → API → LLM):**
+```typescript
+const { sendMessage, isStreaming, streamingContent } = useChatStream();
+const response = await sendMessage(messages, model, textbookContext, imageUrl);
+```
+
+**i18n Usage:**
+```typescript
+import { useTranslations } from "next-intl";
+const t = useTranslations("chat");
+return <p>{t("greeting")}</p>;
+```
+
+**Protected Routes (middleware.ts):**
+```typescript
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+```
 
 ## File Naming Conventions
 
 | Type           | Convention         | Example              |
 | -------------- | ------------------ | -------------------- |
-| Components     | `kebab-case.tsx`   | `student-table.tsx`  |
-| Hooks          | `use-[name].ts`    | `use-debounce.ts`    |
-| Server Actions | `[verb]-[noun].ts` | `create-student.ts`  |
+| Components     | `kebab-case.tsx`   | `chat-input.tsx`     |
+| Hooks          | `use-[name].ts`    | `use-chat-stream.ts` |
+| Convex modules | `camelCase.ts`     | `conversations.ts`   |
 | Route groups   | `([name])/`        | `(dashboard)/`       |
-| Convex         | `camelCase.ts`     | `conversations.ts`   |
-
-## Key Patterns
-
-**Styling with cn():**
-```typescript
-import { cn } from "@/lib/utils";
-
-<div className={cn("base-class", isActive && "active-class")} />
-```
-
-**Convex Queries (when setup):**
-```typescript
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
-const users = useQuery(api.users.list);
-const createUser = useMutation(api.users.create);
-```
-
-**Protected Routes:**
-```typescript
-// middleware.ts - Clerk protects routes
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-
-const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
-```
-
-**Theme Toggle:**
-```typescript
-import { useTheme } from "next-themes";
-
-const { theme, setTheme } = useTheme();
-```
+| i18n messages  | `[locale].json`    | `mn.json`, `en.json` |
 
 ## Styling Guidelines
 
-- Use Tailwind CSS utility classes
-- Use `cn()` helper from `@/lib/utils` for conditional classes
-- Mobile-first: Start with mobile styles, add `md:`, `lg:` breakpoints
+- Tailwind CSS utility classes
+- `cn()` helper from `@/lib/utils` for conditional classes
+- Mobile-first: Start mobile, add `md:`, `lg:` breakpoints
 - Use shadcn/ui components where possible
-- Dark mode: Use `dark:` prefix for dark mode variants
+- Dark mode via `dark:` prefix
 
 ## Important Notes
 
-- All UI text should be in Mongolian by default
-- Use proper Mongolian Cyrillic characters
-- Translation files are in `messages/mn.json` and `messages/en.json`
-- OpenRouter allows switching between LLM models (GPT-4o, Claude, Gemini, DeepSeek)
+- All UI text in Mongolian by default (proper Cyrillic characters)
+- Translation files: `messages/mn.json` and `messages/en.json`
+- Dual LLM support: OpenAI (GPT) and Google Gemini, switchable in UI
+- Chat supports: text input, voice input (STT), image upload (vision)
+- Images uploaded via Convex storage, persist in chat history
+- Vision: GPT-4o for OpenAI, Gemini 2.0 Flash for Google (multimodal)
+- Textbook reference: Users can pin a chapter as context for the LLM
+- Streaming responses: Both OpenAI and Gemini use ReadableStream
+- Build must pass (`bun run build`) before considering any task done
+- Convex handles real-time updates automatically
 
 ## Environment Variables
 
 Required in `.env.local`:
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
-
-Future (when features are implemented):
-- `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`
-- `OPENROUTER_API_KEY`
-- `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`
+```
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+CLERK_SECRET_KEY
+CONVEX_DEPLOYMENT
+NEXT_PUBLIC_CONVEX_URL
+OPENAI_API_KEY
+GOOGLE_AI_API_KEY
+NEXT_PUBLIC_SENTRY_DSN
+SENTRY_AUTH_TOKEN
+NEXT_PUBLIC_POSTHOG_KEY
+NEXT_PUBLIC_POSTHOG_HOST
+```
 
 ## Documentation
 
-Detailed specs are in the `docs/` folder:
-- `BUILD.md` - Full build specifications and setup guide
-- `CODE-STRUCTURE.md` - Component patterns and import strategy
-- `SECURITY-CHAT.md` - Chat security implementation (rate limiting, quotas)
-- `axiom.md` - Logging integration plan
+- `docs/BUILD.md` - Build specifications
+- `docs/CODE-STRUCTURE.md` - Component patterns
+- `docs/SECURITY-CHAT.md` - Chat security (rate limiting, quotas)
+- `SESSION-CONTEXT.md` - Full implementation history and roadmap
