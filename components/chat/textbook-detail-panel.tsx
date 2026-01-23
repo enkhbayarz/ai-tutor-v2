@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ArrowLeft, BookOpen, ChevronDown } from "lucide-react";
+import { TextbookReference } from "./chat-view";
 import {
   Accordion,
   AccordionContent,
@@ -19,12 +20,14 @@ interface TextbookDetailPanelProps {
   textbookId: Id<"textbooks">;
   onBack: () => void;
   onSelectTextbook: (id: Id<"textbooks"> | null) => void;
+  onSetReference: (ref: TextbookReference) => void;
 }
 
 export function TextbookDetailPanel({
   textbookId,
   onBack,
   onSelectTextbook,
+  onSetReference,
 }: TextbookDetailPanelProps) {
   const { user } = useUser();
   const t = useTranslations("chat");
@@ -107,7 +110,7 @@ export function TextbookDetailPanel({
             defaultValue={[chapters[0]?.id]}
             className="mt-4 space-y-2"
           >
-            {chapters.map((chapter, chapterIndex) => (
+            {chapters.map((chapter) => (
               <AccordionItem
                 key={chapter.id}
                 value={chapter.id}
@@ -144,20 +147,30 @@ export function TextbookDetailPanel({
                         </div>
                       ))}
                   </div>
-                  {/* "How can I help?" prompt in first chapter */}
-                  {chapterIndex === 0 && (
-                    <div className="mt-3 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2">
-                      <Image
-                        src="/logo_ai.png"
-                        alt="AI"
-                        width={20}
-                        height={20}
-                      />
-                      <span className="text-xs font-medium text-blue-700">
-                        {t("howCanIHelp")}
-                      </span>
-                    </div>
-                  )}
+                  {/* "How can I help?" - set reference for this chapter */}
+                  <button
+                    onClick={() => onSetReference({
+                      textbookId,
+                      subjectName: textbook.subjectName,
+                      grade: textbook.grade,
+                      chapterTitle: chapter.title,
+                      chapterDescription: chapter.description,
+                      topics: chapter.topics
+                        .sort((a, b) => a.order - b.order)
+                        .map((t) => t.title),
+                    })}
+                    className="mt-3 flex w-full items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 transition-colors hover:bg-blue-100"
+                  >
+                    <Image
+                      src="/logo_ai.png"
+                      alt="AI"
+                      width={20}
+                      height={20}
+                    />
+                    <span className="text-xs font-medium text-blue-700">
+                      {t("howCanIHelp")}
+                    </span>
+                  </button>
                 </AccordionContent>
               </AccordionItem>
             ))}

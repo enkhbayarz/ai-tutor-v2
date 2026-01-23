@@ -385,6 +385,7 @@
     "prepareTest": "Тест бэлдээд өгөөч",
     "lessonPlan": "Хичээлийн төлөвлөгөө гарга",
     "exercise": "Дасгал ажил",
+    "referencing": "Лавлаж байна",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

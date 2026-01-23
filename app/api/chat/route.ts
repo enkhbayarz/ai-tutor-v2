@@ -13,21 +13,28 @@ interface ChatMessage {
 interface ChatRequest {
   messages: ChatMessage[];
   model: "openai" | "gemini";
+  textbookContext?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: ChatRequest = await request.json();
-    const { messages, model } = body;
+    const { messages, model, textbookContext } = body;
 
     if (!messages || !model) {
       return new Response("Missing messages or model", { status: 400 });
     }
 
+    const systemPrompt = textbookContext
+      ? `${SYSTEM_PROMPT}\n\nСурагч дараах сурах бичгийн хичээлийг лавлаж байна:\n${textbookContext}\n\nЭнэ хичээлийн контекстод тохируулан хариулаарай.`
+      : SYSTEM_PROMPT;
+
     const messagesWithSystem: ChatMessage[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       ...messages,
     ];
+
+    console.log("messagesWithSystem", messagesWithSystem);
 
     if (model === "openai") {
       return streamOpenAI(messagesWithSystem);

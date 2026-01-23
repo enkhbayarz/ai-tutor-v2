@@ -6,6 +6,7 @@ import { ArrowLeft, BookOpen, Mic, ChevronRight } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
 import { TextbookPanel } from "./textbook-panel";
 import { TextbookDetailPanel } from "./textbook-detail-panel";
+import { TextbookReference } from "./chat-view";
 
 type PanelView = "collapsed" | "quick-action" | "textbook-list" | "textbook-detail";
 
@@ -14,6 +15,7 @@ interface RightPanelProps {
   onClose: () => void;
   selectedTextbookId: Id<"textbooks"> | null;
   onSelectTextbook: (id: Id<"textbooks"> | null) => void;
+  onSetReference: (ref: TextbookReference) => void;
 }
 
 export function RightPanel({
@@ -21,6 +23,7 @@ export function RightPanel({
   onClose,
   selectedTextbookId,
   onSelectTextbook,
+  onSetReference,
 }: RightPanelProps) {
   const t = useTranslations("chat");
   const [view, setView] = useState<PanelView>("collapsed");
@@ -139,6 +142,7 @@ export function RightPanel({
         textbookId={detailId}
         onBack={handleDetailBack}
         onSelectTextbook={onSelectTextbook}
+        onSetReference={onSetReference}
       />
     );
   }

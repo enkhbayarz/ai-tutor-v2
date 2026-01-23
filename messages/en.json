@@ -385,6 +385,7 @@
     "prepareTest": "Prepare a test",
     "lessonPlan": "Create lesson plan",
     "exercise": "Exercise",
+    "referencing": "Referencing",
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"

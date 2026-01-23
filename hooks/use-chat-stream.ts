@@ -14,7 +14,7 @@ export function useChatStream() {
   const abortRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
-    async (messages: ChatMessage[], model: ModelType): Promise<string> => {
+    async (messages: ChatMessage[], model: ModelType, textbookContext?: string): Promise<string> => {
       setIsStreaming(true);
       setStreamingContent("");
 
@@ -27,7 +27,7 @@ export function useChatStream() {
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages, model }),
+          body: JSON.stringify({ messages, model, textbookContext }),
           signal: abortController.signal,
         });
 

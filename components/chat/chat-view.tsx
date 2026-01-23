@@ -11,7 +11,17 @@ import { ChatContainer } from "./chat-container";
 import { Message } from "./chat-message";
 import { RightPanel } from "./right-panel";
 import { QuickActionButtons } from "./quick-action-buttons";
+import { ReferenceChip } from "./reference-chip";
 import { useChatStream } from "@/hooks/use-chat-stream";
+
+export interface TextbookReference {
+  textbookId: Id<"textbooks">;
+  subjectName: string;
+  grade: number;
+  chapterTitle: string;
+  chapterDescription: string;
+  topics: string[];
+}
 
 interface ChatViewProps {
   conversationId?: Id<"conversations">;
@@ -24,6 +34,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const [panelOpen, setPanelOpen] = useState(true);
   const [selectedTextbookId, setSelectedTextbookId] = useState<Id<"textbooks"> | null>(null);
   const [inputValue, setInputValue] = useState("");
+  const [reference, setReference] = useState<TextbookReference | null>(null);
   const conversationIdRef = useRef<Id<"conversations"> | null>(
     conversationId ?? null
   );
@@ -65,6 +76,11 @@ export function ChatView({ conversationId }: ChatViewProps) {
       setModel(conversation.model as ModelType);
     }
   }, [conversation?.model]);
+
+  const buildTextbookContext = (ref: TextbookReference): string => {
+    const topicsList = ref.topics.map((t, i) => `${i + 1}. ${t}`).join("\n");
+    return `Сурах бичиг: ${ref.subjectName}, ${ref.grade}-р анги\nБүлэг: ${ref.chapterTitle} - ${ref.chapterDescription}\nСэдвүүд:\n${topicsList}`;
+  };
 
   const handleSend = useCallback(
     async (content: string) => {
@@ -109,7 +125,10 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
       // Stream AI response
       try {
-        const assistantContent = await sendMessage(apiMessages, model);
+        const textbookContext = reference
+          ? buildTextbookContext(reference)
+          : undefined;
+        const assistantContent = await sendMessage(apiMessages, model, textbookContext);
 
         if (assistantContent) {
           // Add assistant message to local state
@@ -137,6 +156,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
       model,
       messages,
       isStreaming,
+      reference,
       sendMessage,
       createConversation,
       touchConversation,
@@ -159,8 +179,11 @@ export function ChatView({ conversationId }: ChatViewProps) {
             />
             {/* Input area at bottom */}
             <div className="shrink-0 px-4 pb-6 pt-2">
-              {selectedTextbookId && (
-                <QuickActionButtons onAction={setInputValue} />
+              {reference && (
+                <QuickActionButtons onAction={setInputValue} reference={reference} />
+              )}
+              {reference && (
+                <ReferenceChip reference={reference} onRemove={() => setReference(null)} />
               )}
               <ChatInput
                 onSend={handleSend}
@@ -180,8 +203,11 @@ export function ChatView({ conversationId }: ChatViewProps) {
             </div>
             <div className="relative z-10 flex w-full flex-col items-center gap-6">
               <ChatWelcome />
-              {selectedTextbookId && (
-                <QuickActionButtons onAction={setInputValue} />
+              {reference && (
+                <QuickActionButtons onAction={setInputValue} reference={reference} />
+              )}
+              {reference && (
+                <ReferenceChip reference={reference} onRemove={() => setReference(null)} />
               )}
               <ChatInput
                 onSend={handleSend}
@@ -202,6 +228,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
         onClose={() => setPanelOpen(false)}
         selectedTextbookId={selectedTextbookId}
         onSelectTextbook={setSelectedTextbookId}
+        onSetReference={setReference}
       />
     </div>
   );
