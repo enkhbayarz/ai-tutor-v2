@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -46,6 +47,18 @@ async function extractTextFromPdf(pdfBuffer: Buffer): Promise<{ text: string; pa
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const { userId, getToken } = await auth();
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Set Convex auth token from Clerk
+    const token = await getToken({ template: "convex" });
+    if (token) {
+      convex.setAuth(token);
+    }
+
     const { textbookId } = await request.json();
 
     if (!textbookId) {
@@ -129,6 +142,11 @@ export async function POST(request: NextRequest) {
       extractedText: text,
       tableOfContents: tableOfContents,
       status: "completed",
+    });
+
+    // Track usage
+    await convex.mutation(api.usageEvents.recordEvent, {
+      eventType: "pdf_extraction",
     });
 
     return NextResponse.json({

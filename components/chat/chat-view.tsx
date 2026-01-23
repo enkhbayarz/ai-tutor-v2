@@ -47,6 +47,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const touchConversation = useMutation(api.conversations.touch);
   const saveMessage = useMutation(api.messages.send);
   const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
+  const recordInteraction = useMutation(api.learningInteractions.record);
 
   // Load existing conversation data
   const conversation = useQuery(
@@ -122,7 +123,6 @@ export function ChatView({ conversationId }: ChatViewProps) {
       if (!convId) {
         const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
         convId = await createConversation({
-          clerkUserId: user.id,
           title,
           model,
         });
@@ -180,6 +180,18 @@ export function ChatView({ conversationId }: ChatViewProps) {
             content: assistantContent,
             model,
           });
+
+          // Track learning interaction when textbook reference is active
+          if (reference) {
+            recordInteraction({
+              textbookId: reference.textbookId,
+              subjectName: reference.subjectName,
+              grade: reference.grade,
+              topicTitle: reference.chapterDescription,
+              interactionType: currentImage ? "problem_solving" : "question",
+              conversationId: convId,
+            }).catch(() => {});
+          }
         }
       } catch (error) {
         console.error("Failed to get AI response:", error);
@@ -197,6 +209,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
       createConversation,
       touchConversation,
       saveMessage,
+      recordInteraction,
     ]
   );
 

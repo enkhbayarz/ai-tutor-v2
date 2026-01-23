@@ -58,7 +58,7 @@ export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
 
   const conversations = useQuery(
     api.conversations.list,
-    user?.id ? { clerkUserId: user.id } : "skip"
+    user?.id ? {} : "skip"
   );
   const removeConversation = useMutation(api.conversations.remove);
 

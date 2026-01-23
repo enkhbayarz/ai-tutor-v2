@@ -147,4 +147,80 @@ export default defineSchema({
   })
     .index("by_user", ["clerkUserId"])
     .index("by_user_textbook", ["clerkUserId", "textbookId"]),
+
+  // Learning interactions for student progress tracking
+  learningInteractions: defineTable({
+    clerkUserId: v.string(),
+    textbookId: v.optional(v.id("textbooks")),
+    chapterId: v.optional(v.string()),
+    topicId: v.optional(v.string()),
+    subjectName: v.string(),
+    grade: v.number(),
+    topicTitle: v.string(),
+    interactionType: v.union(
+      v.literal("question"),
+      v.literal("quiz_attempt"),
+      v.literal("explanation_request"),
+      v.literal("problem_solving")
+    ),
+    isCorrect: v.optional(v.boolean()),
+    conversationId: v.optional(v.id("conversations")),
+    timestamp: v.number(),
+  })
+    .index("by_user", ["clerkUserId"])
+    .index("by_user_subject", ["clerkUserId", "subjectName"]),
+
+  // Topic mastery aggregation
+  topicMastery: defineTable({
+    clerkUserId: v.string(),
+    subjectName: v.string(),
+    grade: v.number(),
+    topicTitle: v.string(),
+    masteryLevel: v.union(
+      v.literal("not_started"),
+      v.literal("beginner"),
+      v.literal("intermediate"),
+      v.literal("advanced"),
+      v.literal("mastered")
+    ),
+    totalInteractions: v.number(),
+    correctAnswers: v.number(),
+    totalQuizAttempts: v.number(),
+    lastInteractionAt: v.number(),
+  })
+    .index("by_user", ["clerkUserId"])
+    .index("by_user_subject", ["clerkUserId", "subjectName"])
+    .index("by_mastery", ["clerkUserId", "masteryLevel"]),
+
+  // Overall student progress
+  studentProgress: defineTable({
+    clerkUserId: v.string(),
+    totalInteractions: v.number(),
+    averageAccuracy: v.number(),
+    currentLevel: v.union(
+      v.literal("beginner"),
+      v.literal("intermediate"),
+      v.literal("advanced")
+    ),
+    topicsMastered: v.number(),
+    currentStreak: v.number(),
+    lastActiveAt: v.number(),
+  }).index("by_user", ["clerkUserId"]),
+
+  // Usage events for monitoring and anomaly detection
+  usageEvents: defineTable({
+    clerkUserId: v.string(),
+    eventType: v.union(
+      v.literal("chat_message"),
+      v.literal("stt_request"),
+      v.literal("pdf_extraction"),
+      v.literal("file_upload"),
+      v.literal("image_analysis")
+    ),
+    model: v.optional(v.string()),
+    timestamp: v.number(),
+  })
+    .index("by_user", ["clerkUserId"])
+    .index("by_user_time", ["clerkUserId", "timestamp"])
+    .index("by_timestamp", ["timestamp"]),
 });

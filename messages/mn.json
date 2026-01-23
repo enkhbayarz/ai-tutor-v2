@@ -8,6 +8,8 @@
     "teachers": "Багш",
     "students": "Сурагч",
     "textbooks": "Сурах бичиг",
+    "usage": "Хэрэглээ",
+    "progress": "Дэвшил",
     "settings": "Тохиргоо",
     "help": "Тусламж",
     "logout": "Гарах"
@@ -352,6 +354,57 @@
       "login": "Нэвтэрсэн",
       "logout": "Гарсан"
     }
+  },
+  "progress": {
+    "title": "Сурагчийн дэвшил",
+    "overview": "Ерөнхий",
+    "totalInteractions": "Нийт харилцан үйлдэл",
+    "accuracy": "Нарийвчлал",
+    "topicsMastered": "Эзэмшсэн сэдэв",
+    "currentLevel": "Одоогийн түвшин",
+    "streak": "Тасралтгүй өдөр",
+    "lastActive": "Сүүлд идэвхтэй",
+    "weakAreas": "Сул сэдвүүд",
+    "noWeakAreas": "Сул сэдэв олдсонгүй",
+    "strongAreas": "Хүчтэй сэдвүүд",
+    "noStrongAreas": "Эзэмшсэн сэдэв олдсонгүй",
+    "subjectBreakdown": "Хичээлээр",
+    "noProgress": "Одоогоор суралцсан бичлэг байхгүй байна",
+    "startLearning": "Чатаар асуулт асууж суралцаж эхлээрэй!",
+    "levels": {
+      "beginner": "Анхан шат",
+      "intermediate": "Дунд шат",
+      "advanced": "Ахисан шат"
+    },
+    "mastery": {
+      "not_started": "Эхлээгүй",
+      "beginner": "Анхан",
+      "intermediate": "Дунд",
+      "advanced": "Ахисан",
+      "mastered": "Эзэмшсэн"
+    }
+  },
+  "usage": {
+    "title": "Хэрэглээний мониторинг",
+    "totalToday": "Өнөөдрийн нийт",
+    "totalWeek": "7 хоногийн нийт",
+    "totalAll": "Нийт",
+    "chatMessages": "Чат мессеж",
+    "sttRequests": "Дуу хөрвүүлэлт",
+    "pdfExtractions": "PDF задлалт",
+    "fileUploads": "Файл оруулалт",
+    "imageAnalysis": "Зураг шинжилгээ",
+    "userActivity": "Хэрэглэгчийн үйл ажиллагаа",
+    "user": "Хэрэглэгч",
+    "today": "Өнөөдөр",
+    "week": "7 хоног",
+    "total": "Нийт",
+    "lastActive": "Сүүлд идэвхтэй",
+    "anomalies": "Хэвийн бус үйл ажиллагаа",
+    "noAnomalies": "Хэвийн бус үйл ажиллагаа илрээгүй",
+    "anomalyWarning": "{count} хүсэлт (сүүлийн 5 мин)",
+    "loading": "Ачаалж байна...",
+    "eventTypes": "Төрлөөр"
   },
   "chat": {
     "newChat": "Шинэ чат",

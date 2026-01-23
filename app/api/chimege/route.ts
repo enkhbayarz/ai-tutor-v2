@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 const CHIMEGE_STT_URL = "https://api.chimege.com/v1.2/read";
 const CHIMEGE_TTS_URL = "https://api.chimege.com/v1.2/speak";
 
 export async function POST(request: NextRequest) {
+  // Auth check
+  const { userId, getToken } = await auth();
+  if (!userId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Set Convex auth token
+  const token = await getToken({ template: "convex" });
+  if (token) {
+    convex.setAuth(token);
+  }
+
   const type = request.nextUrl.searchParams.get("type");
 
   if (type === "stt") {
@@ -42,6 +59,12 @@ async function handleSTT(request: NextRequest) {
     }
 
     const data = await response.json();
+
+    // Track STT usage (non-blocking)
+    convex.mutation(api.usageEvents.recordEvent, {
+      eventType: "stt_request",
+    }).catch(() => {});
+
     return NextResponse.json({ text: data.output || "" });
   } catch (error) {
     console.error("STT error:", error);

@@ -1,9 +1,11 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth, requireRole } from "./lib/auth";
 
-// List all active students (excludes deleted)
+// List all active students (all authenticated users)
 export const list = query({
   handler: async (ctx) => {
+    await requireAuth(ctx);
     const students = await ctx.db.query("students").order("desc").collect();
     return students.filter(
       (student) => student.status === "active" || student.status === undefined
@@ -19,7 +21,7 @@ export const getById = query({
   },
 });
 
-// Create a student
+// Create a student (admin only)
 export const create = mutation({
   args: {
     lastName: v.string(),
@@ -30,6 +32,7 @@ export const create = mutation({
     phone2: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin"]);
     return await ctx.db.insert("students", {
       ...args,
       status: "active",
@@ -38,7 +41,7 @@ export const create = mutation({
   },
 });
 
-// Update a student
+// Update a student (admin only)
 export const update = mutation({
   args: {
     id: v.id("students"),
@@ -50,6 +53,7 @@ export const update = mutation({
     phone2: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin"]);
     const { id, ...data } = args;
     return await ctx.db.patch(id, {
       ...data,
@@ -58,10 +62,11 @@ export const update = mutation({
   },
 });
 
-// Soft delete a student (set status to deleted)
+// Soft delete a student (admin only)
 export const softDelete = mutation({
   args: { id: v.id("students") },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin"]);
     return await ctx.db.patch(args.id, {
       status: "deleted",
       updatedAt: Date.now(),

@@ -86,6 +86,46 @@ export const updateProfile = mutation({
   },
 });
 
+// Set user role (admin bootstrap: if no admins exist, first caller becomes admin)
+export const setRole = mutation({
+  args: {
+    role: v.union(v.literal("admin"), v.literal("teacher"), v.literal("student")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!currentUser) throw new Error("User not found");
+
+    // If setting admin role, check if any admin exists
+    if (args.role === "admin") {
+      const allUsers = await ctx.db.query("users").collect();
+      const existingAdmin = allUsers.find((u) => u.role === "admin");
+      // Only allow if no admin exists (bootstrap) or caller is already admin
+      if (existingAdmin && existingAdmin._id !== currentUser._id) {
+        if (currentUser.role !== "admin") {
+          throw new Error("Only admins can assign admin role");
+        }
+      }
+    } else {
+      // Non-admin roles can only be set by admins
+      if (currentUser.role !== "admin" && currentUser._id !== currentUser._id) {
+        throw new Error("Only admins can set roles");
+      }
+    }
+
+    await ctx.db.patch(currentUser._id, {
+      role: args.role,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
 // Internal mutation for webhook (optional)
 export const upsertFromClerk = internalMutation({
   args: {

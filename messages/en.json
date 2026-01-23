@@ -8,6 +8,8 @@
     "teachers": "Teachers",
     "students": "Students",
     "textbooks": "Textbooks",
+    "usage": "Usage",
+    "progress": "Progress",
     "settings": "Settings",
     "help": "Help",
     "logout": "Logout"
@@ -352,6 +354,57 @@
       "login": "Logged in",
       "logout": "Logged out"
     }
+  },
+  "progress": {
+    "title": "Student Progress",
+    "overview": "Overview",
+    "totalInteractions": "Total interactions",
+    "accuracy": "Accuracy",
+    "topicsMastered": "Topics mastered",
+    "currentLevel": "Current level",
+    "streak": "Streak days",
+    "lastActive": "Last active",
+    "weakAreas": "Weak areas",
+    "noWeakAreas": "No weak areas found",
+    "strongAreas": "Strong areas",
+    "noStrongAreas": "No mastered topics found",
+    "subjectBreakdown": "By subject",
+    "noProgress": "No learning records yet",
+    "startLearning": "Start learning by asking questions in chat!",
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "mastery": {
+      "not_started": "Not started",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "mastered": "Mastered"
+    }
+  },
+  "usage": {
+    "title": "Usage Monitoring",
+    "totalToday": "Total today",
+    "totalWeek": "Total this week",
+    "totalAll": "Total all time",
+    "chatMessages": "Chat messages",
+    "sttRequests": "STT requests",
+    "pdfExtractions": "PDF extractions",
+    "fileUploads": "File uploads",
+    "imageAnalysis": "Image analysis",
+    "userActivity": "User activity",
+    "user": "User",
+    "today": "Today",
+    "week": "Week",
+    "total": "Total",
+    "lastActive": "Last active",
+    "anomalies": "Anomalous activity",
+    "noAnomalies": "No anomalous activity detected",
+    "anomalyWarning": "{count} requests (last 5 min)",
+    "loading": "Loading...",
+    "eventTypes": "By type"
   },
   "chat": {
     "newChat": "New Chat",

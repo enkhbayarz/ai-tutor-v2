@@ -12,6 +12,13 @@ const intlMiddleware = createMiddleware({
 const isPublicRoute = createRouteMatcher([
   "/:locale/sign-in(.*)",
   "/:locale/sign-up(.*)",
+  "/api/webhooks(.*)",
+]);
+
+const isProtectedApi = createRouteMatcher([
+  "/api/chat(.*)",
+  "/api/chimege(.*)",
+  "/api/extract-pdf(.*)",
 ]);
 
 // Routes that should skip locale handling
@@ -27,6 +34,11 @@ const isExcludedFromLocale = (pathname: string) => {
 
 export default clerkMiddleware(async (auth, request: NextRequest) => {
   const pathname = request.nextUrl.pathname;
+
+  // Protect API routes that require auth
+  if (isProtectedApi(request)) {
+    await auth.protect();
+  }
 
   // Skip locale middleware for monitoring/api routes
   if (isExcludedFromLocale(pathname)) {

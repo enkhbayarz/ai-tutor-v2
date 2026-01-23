@@ -10,6 +10,8 @@ import {
   Users,
   GraduationCap,
   BookOpen,
+  Activity,
+  TrendingUp,
   PanelLeft,
   Settings,
   HelpCircle,
@@ -38,6 +40,8 @@ export const navItems = [
   { href: "/teacher-info", icon: Users, labelKey: "teachers" },
   { href: "/student-info", icon: GraduationCap, labelKey: "students" },
   { href: "/textbook", icon: BookOpen, labelKey: "textbooks" },
+  { href: "/progress", icon: TrendingUp, labelKey: "progress" },
+  { href: "/usage", icon: Activity, labelKey: "usage" },
 ];
 
 export function Sidebar() {

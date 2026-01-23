@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -19,6 +20,12 @@ interface ChatRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const { userId } = await auth();
+    if (!userId) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
     const body: ChatRequest = await request.json();
     const { messages, model, textbookContext, imageUrl } = body;
 
@@ -26,16 +33,40 @@ export async function POST(request: NextRequest) {
       return new Response("Missing messages or model", { status: 400 });
     }
 
+    // Validate model
+    if (model !== "openai" && model !== "gemini") {
+      return new Response("Invalid model. Use 'openai' or 'gemini'.", { status: 400 });
+    }
+
+    // SSRF prevention: only accept data URLs for images
+    if (imageUrl && !imageUrl.startsWith("data:image/")) {
+      return new Response("Invalid image URL format. Only data URLs are accepted.", { status: 400 });
+    }
+
+    // Input validation
+    if (messages.length > 50) {
+      return new Response("Too many messages. Maximum 50 allowed.", { status: 400 });
+    }
+
+    if (messages.some((m) => m.content && m.content.length > 4000)) {
+      return new Response("Message content too long. Maximum 4000 characters per message.", { status: 400 });
+    }
+
+    if (textbookContext && textbookContext.length > 10000) {
+      return new Response("Textbook context too long. Maximum 10000 characters.", { status: 400 });
+    }
+
+    // Strip system role from client-provided messages (server adds its own)
+    const sanitizedMessages = messages.filter((m) => m.role !== "system");
+
     const systemPrompt = textbookContext
       ? `${SYSTEM_PROMPT}\n\nСурагч дараах сурах бичгийн хичээлийг лавлаж байна:\n${textbookContext}\n\nЭнэ хичээлийн контекстод тохируулан хариулаарай.`
       : SYSTEM_PROMPT;
 
     const messagesWithSystem: ChatMessage[] = [
       { role: "system", content: systemPrompt },
-      ...messages,
+      ...sanitizedMessages,
     ];
-
-    console.log("messagesWithSystem", messagesWithSystem);
 
     if (model === "openai") {
       return streamOpenAI(messagesWithSystem, imageUrl);
@@ -78,8 +109,6 @@ async function streamOpenAI(messages: ChatMessage[], imageUrl?: string): Promise
     return { role: m.role, content: m.content };
   });
 
-  console.log("openaiMessages", openaiMessages);
-
   const stream = await openai.chat.completions.create({
     model: imageUrl ? "gpt-4o" : "gpt-4o-mini",
     messages: openaiMessages,
@@ -116,12 +145,13 @@ async function streamOpenAI(messages: ChatMessage[], imageUrl?: string): Promise
   });
 }
 
-async function imageUrlToBase64(url: string): Promise<{ mimeType: string; data: string }> {
-  const response = await fetch(url);
-  const buffer = await response.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString("base64");
-  const mimeType = response.headers.get("content-type") || "image/jpeg";
-  return { mimeType, data: base64 };
+function parseDataUrl(dataUrl: string): { mimeType: string; data: string } {
+  // Parse data:image/png;base64,iVBOR... format
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) {
+    throw new Error("Invalid data URL format");
+  }
+  return { mimeType: match[1], data: match[2] };
 }
 
 async function streamGemini(messages: ChatMessage[], imageUrl?: string): Promise<Response> {
@@ -138,26 +168,22 @@ async function streamGemini(messages: ChatMessage[], imageUrl?: string): Promise
   const systemMessage = messages.find((m) => m.role === "system");
   const chatMessages = messages.filter((m) => m.role !== "system");
 
-  const contents = await Promise.all(
-    chatMessages.map(async (m, i) => {
-      const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
-      const text = m.content || "Энэ зургийг тайлбарлаж, бодлогыг алхам алхмаар бодож өгнө үү.";
-      parts.push({ text });
+  const contents = chatMessages.map((m, i) => {
+    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+    const text = m.content || "Энэ зургийг тайлбарлаж, бодлогыг алхам алхмаар бодож өгнө үү.";
+    parts.push({ text });
 
-      // Add image to the last user message
-      if (imageUrl && m.role === "user" && i === chatMessages.length - 1) {
-        const imageData = await imageUrlToBase64(imageUrl);
-        parts.push({ inlineData: imageData });
-      }
+    // Add image to the last user message
+    if (imageUrl && m.role === "user" && i === chatMessages.length - 1) {
+      const imageData = parseDataUrl(imageUrl);
+      parts.push({ inlineData: imageData });
+    }
 
-      return {
-        role: m.role === "assistant" ? "model" : "user",
-        parts,
-      };
-    })
-  );
-
-  console.log("contents", contents);
+    return {
+      role: m.role === "assistant" ? "model" : "user",
+      parts,
+    };
+  });
 
   const result = await geminiModel.generateContentStream({
     contents,

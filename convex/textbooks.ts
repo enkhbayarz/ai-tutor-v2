@@ -1,10 +1,13 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireAuth, requireRole } from "./lib/auth";
+import { rateLimiter } from "./rateLimits";
 
-// List active textbooks
+// List active textbooks (all authenticated users)
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    await requireAuth(ctx);
     const textbooks = await ctx.db
       .query("textbooks")
       .filter((q) => q.neq(q.field("status"), "deleted"))
@@ -34,6 +37,7 @@ export const listActive = query({
     subject: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     let textbooks;
 
     if (args.grade) {
@@ -69,10 +73,11 @@ export const listActive = query({
   },
 });
 
-// Get single textbook by ID
+// Get single textbook by ID (all authenticated users)
 export const getById = query({
   args: { id: v.id("textbooks") },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const textbook = await ctx.db.get(args.id);
     if (!textbook || textbook.status === "deleted") {
       return null;
@@ -89,10 +94,11 @@ export const getById = query({
   },
 });
 
-// Generate upload URL for files
+// Generate upload URL for files (admin/teacher only)
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -105,7 +111,7 @@ export const getFileUrl = query({
   },
 });
 
-// Create textbook
+// Create textbook (admin/teacher only)
 export const create = mutation({
   args: {
     subjectName: v.string(),
@@ -118,6 +124,7 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbookId = await ctx.db.insert("textbooks", {
       ...args,
       status: "active",
@@ -127,7 +134,7 @@ export const create = mutation({
   },
 });
 
-// Update textbook
+// Update textbook (admin/teacher only)
 export const update = mutation({
   args: {
     id: v.id("textbooks"),
@@ -141,6 +148,7 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const { id, ...data } = args;
 
     // Get existing textbook to check for file changes
@@ -164,10 +172,11 @@ export const update = mutation({
   },
 });
 
-// Soft delete textbook
+// Soft delete textbook (admin/teacher only)
 export const softDelete = mutation({
   args: { id: v.id("textbooks") },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.id);
     if (!textbook) {
       throw new Error("Textbook not found");
@@ -184,10 +193,11 @@ export const softDelete = mutation({
   },
 });
 
-// Delete file from storage
+// Delete file from storage (admin/teacher only)
 export const deleteFile = mutation({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     await ctx.storage.delete(args.storageId);
   },
 });
@@ -227,7 +237,7 @@ const tocChapterValidator = v.object({
   topics: v.array(tocTopicValidator),
 });
 
-// Update extracted text and status (now includes TOC)
+// Update extracted text and status (admin/teacher only)
 export const updateExtractedText = mutation({
   args: {
     id: v.id("textbooks"),
@@ -237,6 +247,7 @@ export const updateExtractedText = mutation({
     error: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const updateData: Record<string, unknown> = {
       extractedText: args.extractedText,
       textExtractionStatus: args.status,
@@ -257,13 +268,14 @@ export const updateExtractedText = mutation({
 // Table of Contents CRUD Operations
 // ============================================
 
-// Update entire TOC (for drag-drop reordering)
+// Update entire TOC (admin/teacher only)
 export const updateTableOfContents = mutation({
   args: {
     id: v.id("textbooks"),
     tableOfContents: v.array(tocChapterValidator),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     await ctx.db.patch(args.id, {
       tableOfContents: args.tableOfContents,
       tocExtractionStatus: "manual",
@@ -272,16 +284,17 @@ export const updateTableOfContents = mutation({
   },
 });
 
-// Add a new chapter
+// Add a new chapter (admin/teacher only)
 export const addTOCChapter = mutation({
   args: {
     textbookId: v.id("textbooks"),
     chapter: v.object({
-      title: v.string(), // "Бүлэг 1", etc.
-      description: v.string(), // Chapter content name
+      title: v.string(),
+      description: v.string(),
     }),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.textbookId);
     if (!textbook) throw new Error("Textbook not found");
 
@@ -304,15 +317,16 @@ export const addTOCChapter = mutation({
   },
 });
 
-// Update a chapter
+// Update a chapter (admin/teacher only)
 export const updateTOCChapter = mutation({
   args: {
     textbookId: v.id("textbooks"),
     chapterId: v.string(),
-    title: v.string(), // "Бүлэг 1", etc.
-    description: v.string(), // Chapter content name
+    title: v.string(),
+    description: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.textbookId);
     if (!textbook) throw new Error("Textbook not found");
 
@@ -330,11 +344,11 @@ export const updateTOCChapter = mutation({
   },
 });
 
-// Save a chapter (add or update) with its topics
+// Save a chapter (add or update) with its topics (admin/teacher only)
 export const saveTOCChapter = mutation({
   args: {
     textbookId: v.id("textbooks"),
-    chapterId: v.optional(v.string()), // If provided, update; otherwise, add
+    chapterId: v.optional(v.string()),
     title: v.string(),
     description: v.string(),
     topics: v.array(
@@ -347,6 +361,7 @@ export const saveTOCChapter = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.textbookId);
     if (!textbook) throw new Error("Textbook not found");
 
@@ -385,13 +400,14 @@ export const saveTOCChapter = mutation({
   },
 });
 
-// Delete a chapter
+// Delete a chapter (admin/teacher only)
 export const deleteTOCChapter = mutation({
   args: {
     textbookId: v.id("textbooks"),
     chapterId: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.textbookId);
     if (!textbook) throw new Error("Textbook not found");
 
@@ -407,7 +423,7 @@ export const deleteTOCChapter = mutation({
   },
 });
 
-// Add a topic to a chapter
+// Add a topic to a chapter (admin/teacher only)
 export const addTOCTopic = mutation({
   args: {
     textbookId: v.id("textbooks"),
@@ -418,6 +434,7 @@ export const addTOCTopic = mutation({
     }),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.textbookId);
     if (!textbook) throw new Error("Textbook not found");
 
@@ -445,7 +462,7 @@ export const addTOCTopic = mutation({
   },
 });
 
-// Update a topic
+// Update a topic (admin/teacher only)
 export const updateTOCTopic = mutation({
   args: {
     textbookId: v.id("textbooks"),
@@ -455,6 +472,7 @@ export const updateTOCTopic = mutation({
     page: v.number(),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.textbookId);
     if (!textbook) throw new Error("Textbook not found");
 
@@ -483,7 +501,7 @@ export const updateTOCTopic = mutation({
   },
 });
 
-// Delete a topic
+// Delete a topic (admin/teacher only)
 export const deleteTOCTopic = mutation({
   args: {
     textbookId: v.id("textbooks"),
@@ -491,6 +509,7 @@ export const deleteTOCTopic = mutation({
     topicId: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["admin", "teacher"]);
     const textbook = await ctx.db.get(args.textbookId);
     if (!textbook) throw new Error("Textbook not found");
 
