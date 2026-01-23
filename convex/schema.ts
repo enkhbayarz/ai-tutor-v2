@@ -97,6 +97,30 @@ export default defineSchema({
     .index("by_subject", ["subjectName"])
     .index("by_status", ["status"]),
 
+  // Chat conversations
+  conversations: defineTable({
+    clerkUserId: v.string(),
+    title: v.string(),
+    model: v.string(), // "openai" | "gemini"
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["clerkUserId"])
+    .index("by_updated", ["updatedAt"]),
+
+  // Chat messages
+  messages: defineTable({
+    conversationId: v.id("conversations"),
+    role: v.union(
+      v.literal("user"),
+      v.literal("assistant"),
+      v.literal("system")
+    ),
+    content: v.string(),
+    model: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_conversation", ["conversationId"]),
+
   // Login history for security tab - populated by Clerk webhooks
   loginHistory: defineTable({
     clerkUserId: v.string(),
