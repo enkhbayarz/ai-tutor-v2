@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Mic, Send, ChevronDown } from "lucide-react";
+import { Mic, MicOff, Send, ChevronDown } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useVoiceInput } from "@/hooks/use-voice-input";
+import { VoiceIndicator } from "./voice-indicator";
 
 export type ModelType = "openai" | "gemini";
 
@@ -18,7 +20,6 @@ interface ChatInputProps {
   model: ModelType;
   onModelChange: (model: ModelType) => void;
   disabled?: boolean;
-  onMicClick?: () => void;
 }
 
 const MODEL_LABELS: Record<ModelType, string> = {
@@ -31,11 +32,17 @@ export function ChatInput({
   model,
   onModelChange,
   disabled,
-  onMicClick,
 }: ChatInputProps) {
   const t = useTranslations("chat");
   const [message, setMessage] = useState("");
   const [modelOpen, setModelOpen] = useState(false);
+
+  const handleTranscript = useCallback((text: string) => {
+    setMessage((prev) => (prev ? prev + " " + text : text));
+  }, []);
+
+  const { isRecording, isProcessing, audioLevel, hasSpoken, startRecording, stopRecording } =
+    useVoiceInput(handleTranscript);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +51,27 @@ export function ChatInput({
     setMessage("");
   };
 
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
+      {/* Voice indicator */}
+      {(isRecording || isProcessing) && (
+        <div className="mb-2 flex justify-center">
+          <VoiceIndicator
+            audioLevel={audioLevel}
+            hasSpoken={hasSpoken}
+            isProcessing={isProcessing}
+          />
+        </div>
+      )}
+
       <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm">
         {/* Model Selector */}
         <Popover open={modelOpen} onOpenChange={setModelOpen}>
@@ -90,7 +116,7 @@ export function ChatInput({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder={t("inputPlaceholder")}
-          disabled={disabled}
+          disabled={disabled || isRecording}
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400 disabled:opacity-50"
         />
 
@@ -99,18 +125,25 @@ export function ChatInput({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
-          onClick={onMicClick}
-          disabled={disabled}
+          className={cn(
+            "h-8 w-8 shrink-0",
+            isRecording && "text-red-500 animate-pulse"
+          )}
+          onClick={handleMicClick}
+          disabled={disabled || isProcessing}
         >
-          <Mic className="h-4 w-4 text-gray-400" />
+          {isRecording ? (
+            <MicOff className="h-4 w-4" />
+          ) : (
+            <Mic className="h-4 w-4 text-gray-400" />
+          )}
         </Button>
 
         {/* Send Button */}
         <Button
           type="submit"
           size="icon"
-          disabled={disabled || !message.trim()}
+          disabled={disabled || !message.trim() || isRecording}
           className="h-8 w-8 shrink-0 rounded-full bg-blue-500 hover:bg-blue-600 disabled:opacity-30"
         >
           <Send className="h-4 w-4" />

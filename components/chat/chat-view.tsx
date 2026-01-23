@@ -102,11 +102,6 @@ export function ChatView() {
     ]
   );
 
-  const handleMicClick = () => {
-    // Step 7 will connect this to Chimege STT
-    console.log("Mic clicked");
-  };
-
   const hasMessages = messages.length > 0 || isStreaming;
 
   return (
@@ -138,7 +133,6 @@ export function ChatView() {
             model={model}
             onModelChange={setModel}
             disabled={isStreaming}
-            onMicClick={handleMicClick}
           />
         </div>
       </div>
