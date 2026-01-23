@@ -169,19 +169,303 @@ export const getByIdInternal = query({
   },
 });
 
-// Update extracted text and status
+// TOC Chapter/Topic type validators for reuse
+const tocTopicValidator = v.object({
+  id: v.string(),
+  order: v.number(),
+  title: v.string(),
+  page: v.number(),
+});
+
+const tocChapterValidator = v.object({
+  id: v.string(),
+  order: v.number(),
+  title: v.string(), // "Бүлэг 1", "Бүлэг 2", etc.
+  description: v.string(), // Chapter content name
+  topics: v.array(tocTopicValidator),
+});
+
+// Update extracted text and status (now includes TOC)
 export const updateExtractedText = mutation({
   args: {
     id: v.id("textbooks"),
     extractedText: v.optional(v.string()),
+    tableOfContents: v.optional(v.array(tocChapterValidator)),
     status: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed")),
     error: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, {
+    const updateData: Record<string, unknown> = {
       extractedText: args.extractedText,
       textExtractionStatus: args.status,
       textExtractionError: args.error,
+      updatedAt: Date.now(),
+    };
+
+    if (args.tableOfContents !== undefined) {
+      updateData.tableOfContents = args.tableOfContents;
+      updateData.tocExtractionStatus = args.status;
+    }
+
+    await ctx.db.patch(args.id, updateData);
+  },
+});
+
+// ============================================
+// Table of Contents CRUD Operations
+// ============================================
+
+// Update entire TOC (for drag-drop reordering)
+export const updateTableOfContents = mutation({
+  args: {
+    id: v.id("textbooks"),
+    tableOfContents: v.array(tocChapterValidator),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      tableOfContents: args.tableOfContents,
+      tocExtractionStatus: "manual",
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Add a new chapter
+export const addTOCChapter = mutation({
+  args: {
+    textbookId: v.id("textbooks"),
+    chapter: v.object({
+      title: v.string(), // "Бүлэг 1", etc.
+      description: v.string(), // Chapter content name
+    }),
+  },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.textbookId);
+    if (!textbook) throw new Error("Textbook not found");
+
+    const currentTOC = textbook.tableOfContents || [];
+    const newChapter = {
+      id: crypto.randomUUID(),
+      order: currentTOC.length,
+      title: args.chapter.title,
+      description: args.chapter.description,
+      topics: [],
+    };
+
+    await ctx.db.patch(args.textbookId, {
+      tableOfContents: [...currentTOC, newChapter],
+      tocExtractionStatus: "manual",
+      updatedAt: Date.now(),
+    });
+
+    return newChapter.id;
+  },
+});
+
+// Update a chapter
+export const updateTOCChapter = mutation({
+  args: {
+    textbookId: v.id("textbooks"),
+    chapterId: v.string(),
+    title: v.string(), // "Бүлэг 1", etc.
+    description: v.string(), // Chapter content name
+  },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.textbookId);
+    if (!textbook) throw new Error("Textbook not found");
+
+    const updatedTOC = (textbook.tableOfContents || []).map((chapter) =>
+      chapter.id === args.chapterId
+        ? { ...chapter, title: args.title, description: args.description }
+        : chapter
+    );
+
+    await ctx.db.patch(args.textbookId, {
+      tableOfContents: updatedTOC,
+      tocExtractionStatus: "manual",
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Save a chapter (add or update) with its topics
+export const saveTOCChapter = mutation({
+  args: {
+    textbookId: v.id("textbooks"),
+    chapterId: v.optional(v.string()), // If provided, update; otherwise, add
+    title: v.string(),
+    description: v.string(),
+    topics: v.array(
+      v.object({
+        id: v.string(),
+        order: v.number(),
+        title: v.string(),
+        page: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.textbookId);
+    if (!textbook) throw new Error("Textbook not found");
+
+    const currentTOC = textbook.tableOfContents || [];
+
+    let updatedTOC;
+    if (args.chapterId) {
+      // Update existing chapter
+      updatedTOC = currentTOC.map((chapter) =>
+        chapter.id === args.chapterId
+          ? {
+              ...chapter,
+              title: args.title,
+              description: args.description,
+              topics: args.topics,
+            }
+          : chapter
+      );
+    } else {
+      // Add new chapter
+      const newChapter = {
+        id: crypto.randomUUID(),
+        order: currentTOC.length,
+        title: args.title,
+        description: args.description,
+        topics: args.topics,
+      };
+      updatedTOC = [...currentTOC, newChapter];
+    }
+
+    await ctx.db.patch(args.textbookId, {
+      tableOfContents: updatedTOC,
+      tocExtractionStatus: "manual",
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Delete a chapter
+export const deleteTOCChapter = mutation({
+  args: {
+    textbookId: v.id("textbooks"),
+    chapterId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.textbookId);
+    if (!textbook) throw new Error("Textbook not found");
+
+    const updatedTOC = (textbook.tableOfContents || [])
+      .filter((chapter) => chapter.id !== args.chapterId)
+      .map((chapter, index) => ({ ...chapter, order: index }));
+
+    await ctx.db.patch(args.textbookId, {
+      tableOfContents: updatedTOC,
+      tocExtractionStatus: "manual",
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Add a topic to a chapter
+export const addTOCTopic = mutation({
+  args: {
+    textbookId: v.id("textbooks"),
+    chapterId: v.string(),
+    topic: v.object({
+      title: v.string(),
+      page: v.number(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.textbookId);
+    if (!textbook) throw new Error("Textbook not found");
+
+    const updatedTOC = (textbook.tableOfContents || []).map((chapter) => {
+      if (chapter.id !== args.chapterId) return chapter;
+
+      const newTopic = {
+        id: crypto.randomUUID(),
+        order: chapter.topics.length,
+        title: args.topic.title,
+        page: args.topic.page,
+      };
+
+      return {
+        ...chapter,
+        topics: [...chapter.topics, newTopic],
+      };
+    });
+
+    await ctx.db.patch(args.textbookId, {
+      tableOfContents: updatedTOC,
+      tocExtractionStatus: "manual",
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Update a topic
+export const updateTOCTopic = mutation({
+  args: {
+    textbookId: v.id("textbooks"),
+    chapterId: v.string(),
+    topicId: v.string(),
+    title: v.string(),
+    page: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.textbookId);
+    if (!textbook) throw new Error("Textbook not found");
+
+    const updatedTOC = (textbook.tableOfContents || []).map((chapter) => {
+      if (chapter.id !== args.chapterId) return chapter;
+
+      return {
+        ...chapter,
+        topics: chapter.topics.map((topic) =>
+          topic.id === args.topicId
+            ? {
+                ...topic,
+                title: args.title,
+                page: args.page,
+              }
+            : topic
+        ),
+      };
+    });
+
+    await ctx.db.patch(args.textbookId, {
+      tableOfContents: updatedTOC,
+      tocExtractionStatus: "manual",
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Delete a topic
+export const deleteTOCTopic = mutation({
+  args: {
+    textbookId: v.id("textbooks"),
+    chapterId: v.string(),
+    topicId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const textbook = await ctx.db.get(args.textbookId);
+    if (!textbook) throw new Error("Textbook not found");
+
+    const updatedTOC = (textbook.tableOfContents || []).map((chapter) => {
+      if (chapter.id !== args.chapterId) return chapter;
+
+      return {
+        ...chapter,
+        topics: chapter.topics
+          .filter((topic) => topic.id !== args.topicId)
+          .map((topic, index) => ({ ...topic, order: index })),
+      };
+    });
+
+    await ctx.db.patch(args.textbookId, {
+      tableOfContents: updatedTOC,
+      tocExtractionStatus: "manual",
       updatedAt: Date.now(),
     });
   },

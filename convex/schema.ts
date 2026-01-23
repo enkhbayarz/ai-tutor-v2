@@ -63,6 +63,33 @@ export default defineSchema({
       v.union(v.literal("pending"), v.literal("completed"), v.literal("failed"))
     ),
     textExtractionError: v.optional(v.string()),
+    // Table of Contents
+    tableOfContents: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          order: v.number(),
+          title: v.string(), // "Бүлэг 1", "Бүлэг 2", etc.
+          description: v.string(), // Chapter content name
+          topics: v.array(
+            v.object({
+              id: v.string(),
+              order: v.number(),
+              title: v.string(),
+              page: v.number(),
+            })
+          ),
+        })
+      )
+    ),
+    tocExtractionStatus: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("completed"),
+        v.literal("failed"),
+        v.literal("manual")
+      )
+    ),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })

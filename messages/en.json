@@ -204,6 +204,11 @@
     "file": "Attached File",
     "valid": "Valid",
     "invalid": "Invalid",
+    "edit": "Edit",
+    "pdfFile": "Book File",
+    "notFound": "Textbook not found",
+    "backToList": "Back to list",
+    "noPdf": "No PDF file available",
     "subjects": {
       "math": "Mathematics",
       "physics": "Physics",
@@ -219,6 +224,35 @@
       "basic": "Basic",
       "exercise": "Exercise",
       "workbook": "Workbook"
+    }
+  },
+  "toc": {
+    "title": "Table of Contents",
+    "chapters": "Chapters",
+    "chapter": "Chapter",
+    "topics": "Topics",
+    "noChapters": "No chapters available",
+    "addChapter": "Add Chapter",
+    "editChapter": "Edit Chapter",
+    "deleteChapterTitle": "Delete Chapter",
+    "deleteConfirmation": "Are you sure you want to delete \"{name}\"?",
+    "chapterNumber": "Chapter Number",
+    "chapterName": "Chapter Name",
+    "chapterNamePlaceholder": "Enter chapter name",
+    "lessonTopics": "Lesson Topics",
+    "addTopicBtn": "Add Topic",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "edit": "Edit",
+    "done": "Done",
+    "chapterAdded": "Chapter added successfully",
+    "chapterUpdated": "Chapter updated successfully",
+    "chapterDeleted": "Chapter deleted successfully",
+    "error": "An error occurred",
+    "validation": {
+      "requiredFields": "Please fill in required fields"
     }
   },
   "textbookForm": {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, BookOpen } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { FileUpload } from "@/components/textbook";
+import { FileUpload, TableOfContents, TOCChapter } from "@/components/textbook";
 import {
   textbookFormSchema,
   TextbookFormData,
@@ -33,6 +33,7 @@ import {
 export default function EditTextbookPage() {
   const t = useTranslations("textbooks");
   const tForm = useTranslations("textbookForm");
+  const tToc = useTranslations("toc");
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();
@@ -379,6 +380,22 @@ export default function EditTextbookPage() {
               maxSizeLabel={tForm("maxSize", { size: "50MB" })}
               error={errors.pdf}
               variant="pdf"
+            />
+          </div>
+
+          {/* Table of Contents card */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                {tToc("title")}
+              </h2>
+            </div>
+
+            <TableOfContents
+              textbookId={textbookId}
+              chapters={(textbook.tableOfContents || []) as TOCChapter[]}
+              isEditing={true}
             />
           </div>
         </div>

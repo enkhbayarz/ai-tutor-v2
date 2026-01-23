@@ -204,6 +204,11 @@
     "file": "Хавсарсан файл",
     "valid": "Хүчинтэй",
     "invalid": "Хүчингүй",
+    "edit": "Засах",
+    "pdfFile": "Номын файл",
+    "notFound": "Сурах бичиг олдсонгүй",
+    "backToList": "Жагсаалт руу буцах",
+    "noPdf": "PDF файл байхгүй",
     "subjects": {
       "math": "Математик",
       "physics": "Физик",
@@ -219,6 +224,35 @@
       "basic": "Үндсэн",
       "exercise": "Дасгал",
       "workbook": "Дасгал ажлын ном"
+    }
+  },
+  "toc": {
+    "title": "Агуулга",
+    "chapters": "Бүлэг хичээл",
+    "chapter": "Бүлэг",
+    "topics": "Сэдвүүд",
+    "noChapters": "Агуулга байхгүй байна",
+    "addChapter": "Бүлэг нэмэх",
+    "editChapter": "Бүлэг засах",
+    "deleteChapterTitle": "Бүлэг устгах",
+    "deleteConfirmation": "Та \"{name}\"-г устгахдаа итгэлтэй байна уу?",
+    "chapterNumber": "Хичээлийн бүлэг",
+    "chapterName": "Бүлгийн нэр",
+    "chapterNamePlaceholder": "Бүлгийн нэрийг оруулна уу",
+    "lessonTopics": "Хичээлийн сэдэв",
+    "addTopicBtn": "Сэдэв нэмэх",
+    "cancel": "Цуцлах",
+    "save": "Хадгалах",
+    "delete": "Устгах",
+    "deleting": "Устгаж байна...",
+    "edit": "Засах",
+    "done": "Дууссан",
+    "chapterAdded": "Бүлэг амжилттай нэмэгдлээ",
+    "chapterUpdated": "Бүлэг амжилттай шинэчлэгдлээ",
+    "chapterDeleted": "Бүлэг амжилттай устгагдлаа",
+    "error": "Алдаа гарлаа",
+    "validation": {
+      "requiredFields": "Шаардлагатай талбаруудыг бөглөнө үү"
     }
   },
   "textbookForm": {

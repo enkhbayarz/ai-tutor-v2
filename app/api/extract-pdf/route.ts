@@ -85,10 +85,49 @@ export async function POST(request: NextRequest) {
     // 4. Extract text using pdf2json
     const { text, pageCount } = await extractTextFromPdf(pdfBuffer);
 
-    // 5. Save extracted text
+    // 5. Dummy table of contents (extraction will be implemented later)
+    const tableOfContents = [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        title: "Бүлэг 1",
+        description: "БҮХЭЛ ТООН ОЛОНЛОГ",
+        topics: [
+          { id: crypto.randomUUID(), order: 0, title: "Бүхэл тоон олонлогийн ойлголт", page: 5 },
+          { id: crypto.randomUUID(), order: 1, title: "Натурал тооны олонлог", page: 12 },
+          { id: crypto.randomUUID(), order: 2, title: "Бүхэл тоон дээрх үйлдлүүд", page: 20 },
+        ],
+      },
+      {
+        id: crypto.randomUUID(),
+        order: 1,
+        title: "Бүлэг 2",
+        description: "РАЦИОНАЛ ТООН ОЛОНЛОГ",
+        topics: [
+          { id: crypto.randomUUID(), order: 0, title: "Рационал тооны тодорхойлолт", page: 35 },
+          { id: crypto.randomUUID(), order: 1, title: "Энгийн бутархай", page: 42 },
+          { id: crypto.randomUUID(), order: 2, title: "Аравтын бутархай", page: 50 },
+          { id: crypto.randomUUID(), order: 3, title: "Рационал тоон дээрх үйлдлүүд", page: 58 },
+        ],
+      },
+      {
+        id: crypto.randomUUID(),
+        order: 2,
+        title: "Бүлэг 3",
+        description: "МЕХАНИК",
+        topics: [
+          { id: crypto.randomUUID(), order: 0, title: "Кинематик", page: 70 },
+          { id: crypto.randomUUID(), order: 1, title: "Динамик", page: 85 },
+          { id: crypto.randomUUID(), order: 2, title: "Хүч ба хөдөлгөөн", page: 98 },
+        ],
+      },
+    ];
+
+    // 6. Save extracted text and TOC
     await convex.mutation(api.textbooks.updateExtractedText, {
       id: textbookId as Id<"textbooks">,
       extractedText: text,
+      tableOfContents: tableOfContents,
       status: "completed",
     });
 
@@ -96,6 +135,7 @@ export async function POST(request: NextRequest) {
       success: true,
       textLength: text.length,
       pageCount,
+      chaptersFound: tableOfContents.length,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -123,4 +163,4 @@ export async function POST(request: NextRequest) {
 }
 
 // Ensure this route runs in Node.js runtime (not Edge)
-export const runtime = "nodejs";
+// export const runtime = "nodejs";
