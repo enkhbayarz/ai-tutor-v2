@@ -10,6 +10,7 @@
     "textbooks": "Сурах бичиг",
     "usage": "Хэрэглээ",
     "progress": "Дэвшил",
+    "analytics": "Анализ",
     "settings": "Тохиргоо",
     "help": "Тусламж",
     "logout": "Гарах"
@@ -354,6 +355,24 @@
       "login": "Нэвтэрсэн",
       "logout": "Гарсан"
     }
+  },
+  "analytics": {
+    "title": "Анализ",
+    "classOverview": "Ангийн ерөнхий мэдээлэл",
+    "totalStudents": "Нийт сурагч",
+    "averageAccuracy": "Дундаж нарийвчлал",
+    "topicsCovered": "Хамрагдсан сэдэв",
+    "studentsBehind": "Хоцорч буй сурагчид",
+    "noStudentsBehind": "Бүх сурагч хэвийн явж байна",
+    "lowAccuracy": "Нарийвчлал бага",
+    "inactive": "Идэвхгүй (7+ хоног)",
+    "studentName": "Сурагч",
+    "accuracy": "Нарийвчлал",
+    "interactions": "Харилцан үйлдэл",
+    "lastActive": "Сүүлд идэвхтэй",
+    "level": "Түвшин",
+    "loading": "Ачаалж байна...",
+    "noData": "Мэдээлэл олдсонгүй"
   },
   "progress": {
     "title": "Сурагчийн дэвшил",

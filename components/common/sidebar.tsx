@@ -12,12 +12,15 @@ import {
   BookOpen,
   Activity,
   TrendingUp,
+  BarChart3,
   PanelLeft,
   Settings,
   HelpCircle,
   LogOut,
 } from "lucide-react";
 import { SignOutButton } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -37,11 +40,12 @@ import { ProfileSettingsDialog } from "./profile-settings-dialog";
 import { HelpDialog } from "./help-dialog";
 
 export const navItems = [
-  { href: "/teacher-info", icon: Users, labelKey: "teachers" },
-  { href: "/student-info", icon: GraduationCap, labelKey: "students" },
-  { href: "/textbook", icon: BookOpen, labelKey: "textbooks" },
-  { href: "/progress", icon: TrendingUp, labelKey: "progress" },
-  { href: "/usage", icon: Activity, labelKey: "usage" },
+  { href: "/teacher-info", icon: Users, labelKey: "teachers", roles: ["admin"] },
+  { href: "/student-info", icon: GraduationCap, labelKey: "students", roles: ["admin"] },
+  { href: "/textbook", icon: BookOpen, labelKey: "textbooks", roles: ["admin", "teacher"] },
+  { href: "/progress", icon: TrendingUp, labelKey: "progress", roles: ["admin", "teacher", "student"] },
+  { href: "/analytics", icon: BarChart3, labelKey: "analytics", roles: ["admin", "teacher"] },
+  { href: "/usage", icon: Activity, labelKey: "usage", roles: ["admin"] },
 ];
 
 export function Sidebar() {
@@ -54,6 +58,12 @@ export function Sidebar() {
   const [showExpandIcon, setShowExpandIcon] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const userRole = currentUser?.role || "student";
+
+  const filteredNavItems = navItems.filter((item) =>
+    item.roles.includes(userRole)
+  );
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -101,7 +111,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className={cn("flex-1 flex flex-col gap-2", expanded && "w-full")}>
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const localizedHref = `/${locale}${item.href}`;
             const isActive = pathname === localizedHref;
             const Icon = item.icon;

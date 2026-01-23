@@ -207,6 +207,27 @@ export default defineSchema({
     lastActiveAt: v.number(),
   }).index("by_user", ["clerkUserId"]),
 
+  // Learning paths for personalization
+  learningPaths: defineTable({
+    clerkUserId: v.string(),
+    subjectName: v.string(),
+    grade: v.number(),
+    currentLevel: v.string(),
+    completedTopics: v.array(v.string()),
+    currentTopicId: v.optional(v.string()),
+    recommendedNextTopics: v.array(
+      v.object({
+        topicId: v.string(),
+        topicTitle: v.string(),
+        reason: v.string(),
+        priority: v.number(),
+      })
+    ),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["clerkUserId"])
+    .index("by_user_subject", ["clerkUserId", "subjectName"]),
+
   // Usage events for monitoring and anomaly detection
   usageEvents: defineTable({
     clerkUserId: v.string(),

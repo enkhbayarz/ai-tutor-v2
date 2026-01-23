@@ -2,6 +2,10 @@ import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 const SYSTEM_PROMPT =
   "Та бол Монгол хэлээр заадаг AI багш туслах. Сурагчдад тусалж, асуултад тодорхой, товч хариулаарай. Хэрэв сурагч даалгавар эсвэл бодлого асуувал алхам алхмаар тайлбарлаж өгөөрэй.";
@@ -21,9 +25,15 @@ interface ChatRequest {
 export async function POST(request: NextRequest) {
   try {
     // Auth check
-    const { userId } = await auth();
+    const { userId, getToken } = await auth();
     if (!userId) {
       return new Response("Unauthorized", { status: 401 });
+    }
+
+    // Set Convex auth for personalization queries
+    const token = await getToken({ template: "convex" });
+    if (token) {
+      convex.setAuth(token);
     }
 
     const body: ChatRequest = await request.json();
@@ -59,9 +69,26 @@ export async function POST(request: NextRequest) {
     // Strip system role from client-provided messages (server adds its own)
     const sanitizedMessages = messages.filter((m) => m.role !== "system");
 
+    // Fetch student's weak areas for personalization (non-blocking, fail-safe)
+    let personalizationContext = "";
+    try {
+      if (token) {
+        const weakTopics = await convex.query(api.topicMastery.getWeakTopics);
+        if (weakTopics && weakTopics.length > 0) {
+          const weakList = weakTopics
+            .slice(0, 5)
+            .map((t) => t.topicTitle)
+            .join(", ");
+          personalizationContext = `\n\nСурагчийн сул талууд: ${weakList}. Энэ сурагчид хариулах үедээ тэдний сул талуудыг анхаарч, нэмэлт тайлбар өгөх.`;
+        }
+      }
+    } catch {
+      // Personalization is optional, don't block chat
+    }
+
     const systemPrompt = textbookContext
-      ? `${SYSTEM_PROMPT}\n\nСурагч дараах сурах бичгийн хичээлийг лавлаж байна:\n${textbookContext}\n\nЭнэ хичээлийн контекстод тохируулан хариулаарай.`
-      : SYSTEM_PROMPT;
+      ? `${SYSTEM_PROMPT}${personalizationContext}\n\nСурагч дараах сурах бичгийн хичээлийг лавлаж байна:\n${textbookContext}\n\nЭнэ хичээлийн контекстод тохируулан хариулаарай.`
+      : `${SYSTEM_PROMPT}${personalizationContext}`;
 
     const messagesWithSystem: ChatMessage[] = [
       { role: "system", content: systemPrompt },

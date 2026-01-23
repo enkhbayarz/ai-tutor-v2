@@ -10,6 +10,7 @@
     "textbooks": "Textbooks",
     "usage": "Usage",
     "progress": "Progress",
+    "analytics": "Analytics",
     "settings": "Settings",
     "help": "Help",
     "logout": "Logout"
@@ -354,6 +355,24 @@
       "login": "Logged in",
       "logout": "Logged out"
     }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "classOverview": "Class overview",
+    "totalStudents": "Total students",
+    "averageAccuracy": "Average accuracy",
+    "topicsCovered": "Topics covered",
+    "studentsBehind": "Students falling behind",
+    "noStudentsBehind": "All students are on track",
+    "lowAccuracy": "Low accuracy",
+    "inactive": "Inactive (7+ days)",
+    "studentName": "Student",
+    "accuracy": "Accuracy",
+    "interactions": "Interactions",
+    "lastActive": "Last active",
+    "level": "Level",
+    "loading": "Loading...",
+    "noData": "No data found"
   },
   "progress": {
     "title": "Student Progress",
