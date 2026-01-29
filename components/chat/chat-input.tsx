@@ -54,8 +54,17 @@ export function ChatInput({
     setMessage(current ? current + " " + text : text);
   }, [value, internalMessage, setMessage]);
 
-  const { isRecording, isProcessing, audioLevel, hasSpoken, startRecording, stopRecording } =
-    useVoiceInput(handleTranscript);
+  const {
+    isRecording,
+    isProcessing,
+    audioLevel,
+    hasSpoken,
+    devices,
+    selectedDeviceId,
+    setSelectedDeviceId,
+    startRecording,
+    stopRecording,
+  } = useVoiceInput(handleTranscript);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +119,23 @@ export function ChatInput({
         onChange={handleFileSelect}
         className="hidden"
       />
+
+      {/* Mic selector when multiple devices available */}
+      {devices.length > 1 && !isRecording && !isProcessing && (
+        <div className="mb-2 flex justify-center">
+          <select
+            value={selectedDeviceId}
+            onChange={(e) => setSelectedDeviceId(e.target.value)}
+            className="w-full max-w-xs rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700"
+          >
+            {devices.map((d) => (
+              <option key={d.deviceId} value={d.deviceId}>
+                {d.label || `Mic ${d.deviceId.slice(0, 8)}`}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Voice indicator */}
       {(isRecording || isProcessing) && (

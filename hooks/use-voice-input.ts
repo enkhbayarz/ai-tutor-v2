@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const SILENCE_THRESHOLD = 5;
 const SILENCE_DURATION = 1000; // ms of silence before auto-stop
@@ -11,6 +11,9 @@ interface UseVoiceInputReturn {
   isProcessing: boolean;
   audioLevel: number;
   hasSpoken: boolean;
+  devices: MediaDeviceInfo[];
+  selectedDeviceId: string;
+  setSelectedDeviceId: (id: string) => void;
   startRecording: () => Promise<void>;
   stopRecording: () => void;
 }
@@ -22,6 +25,8 @@ export function useVoiceInput(
   const [isProcessing, setIsProcessing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [hasSpoken, setHasSpoken] = useState(false);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -30,6 +35,39 @@ export function useVoiceInput(
   const streamRef = useRef<MediaStream | null>(null);
   const silenceStartRef = useRef<number | null>(null);
   const hasSpokenRef = useRef(false);
+
+  // Get microphone permission and enumerate devices on mount
+  useEffect(() => {
+    const initDevices = async () => {
+      try {
+        // First request permission
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Then enumerate devices
+        const allDevices = await navigator.mediaDevices.enumerateDevices();
+        const mics = allDevices.filter((d) => d.kind === "audioinput");
+        setDevices(mics);
+
+        // Try to find MacBook mic or use first available
+        const macMic = mics.find((d) => d.label.includes("MacBook"));
+        const defaultDevice = macMic?.deviceId || mics[0]?.deviceId || "";
+        setSelectedDeviceId(defaultDevice);
+
+        console.log("[MIC] Available microphones:", mics.map(m => m.label || m.deviceId));
+        console.log("[MIC] Selected device:", defaultDevice);
+      } catch (error) {
+        console.error("[MIC] Failed to get microphone permission:", error);
+      }
+    };
+
+    initDevices();
+
+    return () => {
+      cancelAnimationFrame(animationRef.current);
+      audioContextRef.current?.close();
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
 
   const cleanup = useCallback(() => {
     cancelAnimationFrame(animationRef.current);
@@ -42,31 +80,40 @@ export function useVoiceInput(
 
   const transcribeAudio = useCallback(
     async (blob: Blob) => {
+      console.log("[STT] Starting transcription, blob size:", blob.size);
       setIsProcessing(true);
       try {
         let buffer = await blob.arrayBuffer();
+        console.log("[STT] Buffer size:", buffer.byteLength);
 
         // Pad small buffers to meet minimum size
         const minSize = 5120;
         if (buffer.byteLength < minSize) {
+          console.log("[STT] Padding buffer to minimum size");
           const padded = new ArrayBuffer(minSize);
           new Uint8Array(padded).set(new Uint8Array(buffer), 0);
           buffer = padded;
         }
 
+        console.log("[STT] Sending to /api/chimege?type=stt");
         const response = await fetch("/api/chimege?type=stt", {
           method: "POST",
           headers: { "Content-Type": "application/octet-stream" },
           body: buffer,
         });
 
+        console.log("[STT] Response status:", response.status);
         const data = await response.json();
+        console.log("[STT] Response data:", data);
 
         if (response.ok && data.text) {
+          console.log("[STT] Transcription successful:", data.text);
           onTranscript(data.text);
+        } else {
+          console.error("[STT] Transcription failed:", data.error || "No text returned");
         }
       } catch (error) {
-        console.error("Transcription error:", error);
+        console.error("[STT] Transcription error:", error);
       } finally {
         setIsProcessing(false);
       }
@@ -75,9 +122,23 @@ export function useVoiceInput(
   );
 
   const startRecording = useCallback(async () => {
+    console.log("[MIC] Starting recording...");
+    console.log("[MIC] Using device ID:", selectedDeviceId || "default");
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Use specific device if selected (like the working TutorChimegePage)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: selectedDeviceId
+          ? { deviceId: { exact: selectedDeviceId } }
+          : true,
+      });
+
+      console.log("[MIC] Got media stream");
       streamRef.current = stream;
+
+      // Log available tracks
+      const tracks = stream.getAudioTracks();
+      console.log("[MIC] Audio tracks:", tracks.map(t => ({ label: t.label, enabled: t.enabled, muted: t.muted })));
 
       // Reset state
       silenceStartRef.current = null;
@@ -92,6 +153,8 @@ export function useVoiceInput(
       analyser.fftSize = 256;
       source.connect(analyser);
 
+      console.log("[MIC] Audio context created, sample rate:", audioCtx.sampleRate);
+
       const checkLevel = () => {
         const data = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(data);
@@ -103,6 +166,7 @@ export function useVoiceInput(
           if (!hasSpokenRef.current) {
             hasSpokenRef.current = true;
             setHasSpoken(true);
+            console.log("[MIC] Voice detected! Level:", avg);
           }
           silenceStartRef.current = null;
         } else if (hasSpokenRef.current) {
@@ -110,6 +174,7 @@ export function useVoiceInput(
             silenceStartRef.current = Date.now();
           } else if (Date.now() - silenceStartRef.current > SILENCE_DURATION) {
             // Auto-stop after silence
+            console.log("[MIC] Auto-stopping after silence");
             if (mediaRecorderRef.current?.state === "recording") {
               mediaRecorderRef.current.stop();
               setIsRecording(false);
@@ -130,27 +195,34 @@ export function useVoiceInput(
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data);
+          console.log("[MIC] Received audio chunk, size:", e.data.size);
         }
       };
 
       mediaRecorder.onstop = async () => {
+        console.log("[MIC] Recording stopped");
         cleanup();
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        console.log("[MIC] Total blob size:", blob.size, "hasSpoken:", hasSpokenRef.current);
 
         if (hasSpokenRef.current && blob.size > MIN_BLOB_SIZE) {
           await transcribeAudio(blob);
+        } else {
+          console.log("[MIC] Skipping transcription - no speech or too small");
         }
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      console.log("[MIC] Recording started - speak now!");
     } catch (error) {
-      console.error("Recording error:", error);
+      console.error("[MIC] Recording error:", error);
       cleanup();
     }
-  }, [cleanup, transcribeAudio]);
+  }, [cleanup, transcribeAudio, selectedDeviceId]);
 
   const stopRecording = useCallback(() => {
+    console.log("[MIC] Manual stop requested");
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -162,6 +234,9 @@ export function useVoiceInput(
     isProcessing,
     audioLevel,
     hasSpoken,
+    devices,
+    selectedDeviceId,
+    setSelectedDeviceId,
     startRecording,
     stopRecording,
   };
