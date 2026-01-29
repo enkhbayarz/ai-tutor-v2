@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import { MessageActions } from "./message-actions";
 
 export interface Message {
@@ -15,22 +19,46 @@ interface ChatMessageProps {
   isStreaming?: boolean;
 }
 
-function formatContent(content: string) {
-  // Simple markdown: bold and line breaks
-  return content.split("\n").map((line, i) => {
-    const parts = line.split(/(\*\*[^*]+\*\*)/g);
-    return (
-      <span key={i}>
-        {i > 0 && <br />}
-        {parts.map((part, j) => {
-          if (part.startsWith("**") && part.endsWith("**")) {
-            return <strong key={j}>{part.slice(2, -2)}</strong>;
-          }
-          return <span key={j}>{part}</span>;
-        })}
-      </span>
-    );
-  });
+/**
+ * Pre-process content to normalize math delimiters for remark-math
+ * Converts various LaTeX formats to standard $...$ and $$...$$
+ */
+function preprocessMath(content: string): string {
+  let processed = content;
+
+  // Convert \[...\] to $$...$$ (display math)
+  processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, "\n$$\n$1\n$$\n");
+
+  // Convert \(...\) to $...$ (inline math)
+  processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, "$$$1$$");
+
+  // Wrap standalone \sqrt[...]{...} commands
+  processed = processed.replace(
+    /(?<!\$)\\sqrt(\[[^\]]*\])?\{[^}]+\}(?!\$)/g,
+    (match) => `$${match}$`
+  );
+
+  // Wrap standalone \frac{...}{...} commands
+  processed = processed.replace(
+    /(?<!\$)\\frac\{[^}]+\}\{[^}]+\}(?!\$)/g,
+    (match) => `$${match}$`
+  );
+
+  // Wrap expressions with \times, \cdot, \div that aren't already in math mode
+  // Match patterns like: 2^3 \times 3^3 or a \times b
+  processed = processed.replace(
+    /(?<!\$)(\S+\s*\\(?:times|cdot|div)\s*\S+)(?!\$)/g,
+    (match) => `$${match}$`
+  );
+
+  // Wrap standalone superscript/subscript expressions like 2^3, x_1
+  // But only if they contain backslash commands nearby
+  processed = processed.replace(
+    /(?<!\$)(\d+\^[\d{}]+\s*\\times\s*\d+\^[\d{}]+)(?!\$)/g,
+    (match) => `$${match}$`
+  );
+
+  return processed;
 }
 
 export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
@@ -56,6 +84,8 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
     );
   }
 
+  const processedContent = preprocessMath(message.content);
+
   return (
     <div className="flex gap-3">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50">
@@ -68,8 +98,13 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
         />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">
-          {formatContent(message.content)}
+        <div className="prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-200">
+          <ReactMarkdown
+            remarkPlugins={[remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+          >
+            {processedContent}
+          </ReactMarkdown>
           {isStreaming && (
             <span className="ml-0.5 inline-block h-4 w-2 animate-pulse bg-gray-400" />
           )}
