@@ -10,7 +10,7 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
 
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
-  roles: string[]
+  roles: string[],
 ) {
   const identity = await requireAuth(ctx);
   const user = await ctx.db

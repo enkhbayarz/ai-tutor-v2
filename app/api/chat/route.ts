@@ -45,25 +45,38 @@ export async function POST(request: NextRequest) {
 
     // Validate model
     if (model !== "openai" && model !== "gemini") {
-      return new Response("Invalid model. Use 'openai' or 'gemini'.", { status: 400 });
+      return new Response("Invalid model. Use 'openai' or 'gemini'.", {
+        status: 400,
+      });
     }
 
     // SSRF prevention: only accept data URLs for images
     if (imageUrl && !imageUrl.startsWith("data:image/")) {
-      return new Response("Invalid image URL format. Only data URLs are accepted.", { status: 400 });
+      return new Response(
+        "Invalid image URL format. Only data URLs are accepted.",
+        { status: 400 },
+      );
     }
 
     // Input validation
     if (messages.length > 50) {
-      return new Response("Too many messages. Maximum 50 allowed.", { status: 400 });
+      return new Response("Too many messages. Maximum 50 allowed.", {
+        status: 400,
+      });
     }
 
     if (messages.some((m) => m.content && m.content.length > 4000)) {
-      return new Response("Message content too long. Maximum 4000 characters per message.", { status: 400 });
+      return new Response(
+        "Message content too long. Maximum 4000 characters per message.",
+        { status: 400 },
+      );
     }
 
     if (textbookContext && textbookContext.length > 10000) {
-      return new Response("Textbook context too long. Maximum 10000 characters.", { status: 400 });
+      return new Response(
+        "Textbook context too long. Maximum 10000 characters.",
+        { status: 400 },
+      );
     }
 
     // Strip system role from client-provided messages (server adds its own)
@@ -110,7 +123,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function streamOpenAI(messages: ChatMessage[], imageUrl?: string): Promise<Response> {
+async function streamOpenAI(
+  messages: ChatMessage[],
+  imageUrl?: string,
+): Promise<Response> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return new Response("OPENAI_API_KEY not configured", { status: 500 });
@@ -121,15 +137,29 @@ async function streamOpenAI(messages: ChatMessage[], imageUrl?: string): Promise
   // Build messages, converting last user message to multimodal if image present
   type OpenAIMessage =
     | { role: "user" | "assistant" | "system"; content: string }
-    | { role: "user"; content: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string; detail: "high" } }> };
+    | {
+        role: "user";
+        content: Array<
+          | { type: "text"; text: string }
+          | { type: "image_url"; image_url: { url: string; detail: "high" } }
+        >;
+      };
 
   const openaiMessages: OpenAIMessage[] = messages.map((m, i) => {
     if (imageUrl && m.role === "user" && i === messages.length - 1) {
       return {
         role: "user" as const,
         content: [
-          { type: "text" as const, text: m.content || "Энэ зургийг тайлбарлаж, бодлогыг алхам алхмаар бодож өгнө үү." },
-          { type: "image_url" as const, image_url: { url: imageUrl, detail: "high" as const } },
+          {
+            type: "text" as const,
+            text:
+              m.content ||
+              "Энэ зургийг тайлбарлаж, бодлогыг алхам алхмаар бодож өгнө үү.",
+          },
+          {
+            type: "image_url" as const,
+            image_url: { url: imageUrl, detail: "high" as const },
+          },
         ],
       };
     }
@@ -181,14 +211,19 @@ function parseDataUrl(dataUrl: string): { mimeType: string; data: string } {
   return { mimeType: match[1], data: match[2] };
 }
 
-async function streamGemini(messages: ChatMessage[], imageUrl?: string): Promise<Response> {
+async function streamGemini(
+  messages: ChatMessage[],
+  imageUrl?: string,
+): Promise<Response> {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
     return new Response("GOOGLE_AI_API_KEY not configured", { status: 500 });
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const geminiModel = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash-lite",
+  });
 
   // Convert messages to Gemini format
   // Gemini doesn't support "system" role in contents, so we use systemInstruction
@@ -196,8 +231,12 @@ async function streamGemini(messages: ChatMessage[], imageUrl?: string): Promise
   const chatMessages = messages.filter((m) => m.role !== "system");
 
   const contents = chatMessages.map((m, i) => {
-    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
-    const text = m.content || "Энэ зургийг тайлбарлаж, бодлогыг алхам алхмаар бодож өгнө үү.";
+    const parts: Array<
+      { text: string } | { inlineData: { mimeType: string; data: string } }
+    > = [];
+    const text =
+      m.content ||
+      "Энэ зургийг тайлбарлаж, бодлогыг алхам алхмаар бодож өгнө үү.";
     parts.push({ text });
 
     // Add image to the last user message

@@ -11,3 +11,4 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // STT requests: 10 per minute per user
   sttRequest: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 10 },
 });
+

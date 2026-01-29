@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -21,6 +21,7 @@ import {
 } from "@/components/shared";
 import { studentFormSchema, VALIDATION_LIMITS } from "@/lib/validations/student";
 import { exportToExcel } from "@/lib/export-excel";
+import { BulkImportDialog } from "@/components/student";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -46,6 +47,7 @@ interface TableStudent {
 export default function StudentInfoPage() {
   const t = useTranslations("students");
   const tForm = useTranslations("studentForm");
+  const tBulkImport = useTranslations("bulkImport");
   const [search, setSearch] = useState("");
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -53,6 +55,9 @@ export default function StudentInfoPage() {
 
   // Add dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+
+  // Bulk import dialog state
+  const [bulkImportDialogOpen, setBulkImportDialogOpen] = useState(false);
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -266,6 +271,15 @@ export default function StudentInfoPage() {
             {t("exportExcel")}
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full px-4"
+            onClick={() => setBulkImportDialogOpen(true)}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {t("bulkImport")}
+          </Button>
+          <Button
             size="sm"
             className="bg-blue-500 hover:bg-blue-600 rounded-full px-4"
             onClick={() => setAddDialogOpen(true)}
@@ -380,6 +394,52 @@ export default function StudentInfoPage() {
           cancel: tForm("cancel"),
           delete: tForm("delete"),
           deleting: tForm("deleting"),
+        }}
+      />
+
+      {/* Bulk Import Dialog */}
+      <BulkImportDialog
+        open={bulkImportDialogOpen}
+        onOpenChange={setBulkImportDialogOpen}
+        labels={{
+          title: tBulkImport("title"),
+          uploadStep: tBulkImport("uploadStep"),
+          previewStep: tBulkImport("previewStep"),
+          processStep: tBulkImport("processStep"),
+          resultsStep: tBulkImport("resultsStep"),
+          dragDrop: tBulkImport("dragDrop"),
+          orClick: tBulkImport("orClick"),
+          supportedFormats: tBulkImport("supportedFormats"),
+          downloadTemplate: tBulkImport("downloadTemplate"),
+          rowCount: (count: number) => tBulkImport("rowCount", { count }),
+          validRows: (count: number) => tBulkImport("validRows", { count }),
+          invalidRows: (count: number) => tBulkImport("invalidRows", { count }),
+          fixErrors: tBulkImport("fixErrors"),
+          process: tBulkImport("process"),
+          processing: tBulkImport("processing"),
+          back: tBulkImport("back"),
+          close: tBulkImport("close"),
+          rowNumber: tBulkImport("rowNumber"),
+          lastName: tBulkImport("lastName"),
+          firstName: tBulkImport("firstName"),
+          grade: tBulkImport("grade"),
+          group: tBulkImport("group"),
+          phone1: tBulkImport("phone1"),
+          phone2: tBulkImport("phone2"),
+          status: tBulkImport("status"),
+          valid: tBulkImport("valid"),
+          invalid: tBulkImport("invalid"),
+          summary: tBulkImport("summary"),
+          total: tBulkImport("total"),
+          success: tBulkImport("success"),
+          failed: tBulkImport("failed"),
+          name: tBulkImport("name"),
+          username: tBulkImport("username"),
+          tempPassword: tBulkImport("tempPassword"),
+          error: tBulkImport("error"),
+          downloadResults: tBulkImport("downloadResults"),
+          successStatus: tBulkImport("successStatus"),
+          failedStatus: tBulkImport("failedStatus"),
         }}
       />
     </div>

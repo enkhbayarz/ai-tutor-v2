@@ -13,6 +13,7 @@
     "@axiomhq/logging": "^0.1.6",
     "@axiomhq/nextjs": "^0.1.6",
     "@axiomhq/react": "^0.1.6",
+    "@clerk/backend": "^2.29.5",
     "@clerk/nextjs": "^6.36.8",
     "@convex-dev/rate-limiter": "^0.3.2",
     "@google/generative-ai": "^0.24.1",

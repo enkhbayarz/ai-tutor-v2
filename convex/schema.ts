@@ -41,11 +41,15 @@ export default defineSchema({
     phone1: v.string(),
     phone2: v.optional(v.string()),
     status: v.optional(v.union(v.literal("active"), v.literal("deleted"))),
+    // Clerk user link for bulk-imported students
+    clerkId: v.optional(v.string()),
+    username: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
     .index("by_grade", ["grade"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_clerk_id", ["clerkId"]),
 
   textbooks: defineTable({
     subjectName: v.string(),
