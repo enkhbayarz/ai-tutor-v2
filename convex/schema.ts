@@ -106,6 +106,7 @@ export default defineSchema({
     clerkUserId: v.string(),
     title: v.string(),
     model: v.string(), // "openai" | "gemini"
+    sessionId: v.optional(v.string()), // UUID for external AI backend
     createdAt: v.number(),
     updatedAt: v.number(),
   })

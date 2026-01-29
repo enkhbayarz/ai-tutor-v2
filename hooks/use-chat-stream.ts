@@ -1,12 +1,6 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { ModelType } from "@/components/chat/chat-input";
-
-interface ChatMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
 
 export function useChatStream() {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -14,7 +8,11 @@ export function useChatStream() {
   const abortRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
-    async (messages: ChatMessage[], model: ModelType, textbookContext?: string, imageUrl?: string): Promise<string> => {
+    async (
+      message: string,
+      sessionId?: string,
+      classId?: string,
+    ): Promise<string> => {
       setIsStreaming(true);
       setStreamingContent("");
 
@@ -24,10 +22,14 @@ export function useChatStream() {
       let fullContent = "";
 
       try {
-        const response = await fetch("/api/chat", {
+        const response = await fetch("/api/chat-v2", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages, model, textbookContext, imageUrl }),
+          body: JSON.stringify({
+            message,
+            sessionId,
+            classId,
+          }),
           signal: abortController.signal,
         });
 
@@ -62,7 +64,7 @@ export function useChatStream() {
 
       return fullContent;
     },
-    []
+    [],
   );
 
   const cancel = useCallback(() => {

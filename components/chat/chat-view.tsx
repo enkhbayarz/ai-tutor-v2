@@ -39,6 +39,8 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const conversationIdRef = useRef<Id<"conversations"> | null>(
     conversationId ?? null
   );
+  // Session ID for external AI backend (UUID format)
+  const sessionIdRef = useRef<string | null>(null);
   const loadedRef = useRef(false);
 
   const { sendMessage, isStreaming, streamingContent } = useChatStream();
@@ -81,10 +83,12 @@ export function ChatView({ conversationId }: ChatViewProps) {
     }
   }, [conversation?.model]);
 
-  const buildTextbookContext = (ref: TextbookReference): string => {
-    const topicsList = ref.topics.map((t, i) => `${i + 1}. ${t}`).join("\n");
-    return `Сурах бичиг: ${ref.subjectName}, ${ref.grade}-р анги\nБүлэг: ${ref.chapterTitle} - ${ref.chapterDescription}\nСэдвүүд:\n${topicsList}`;
-  };
+  // Set sessionId from loaded conversation
+  useEffect(() => {
+    if (conversation?.sessionId) {
+      sessionIdRef.current = conversation.sessionId;
+    }
+  }, [conversation?.sessionId]);
 
   const handleSend = useCallback(
     async (content: string) => {
@@ -120,11 +124,17 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
       // Create conversation in Convex if first message
       let convId = conversationIdRef.current;
+      let currentSessionId = sessionIdRef.current;
       if (!convId) {
+        // Generate new session ID for external AI backend
+        currentSessionId = crypto.randomUUID();
+        sessionIdRef.current = currentSessionId;
+
         const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
         convId = await createConversation({
           title,
           model,
+          sessionId: currentSessionId,
         });
         conversationIdRef.current = convId;
       } else {
@@ -140,29 +150,9 @@ export function ChatView({ conversationId }: ChatViewProps) {
         imageId: imageStorageId,
       });
 
-      // Build messages array for API (only role + content)
-      const apiMessages = [...messages, userMsg].map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      // Stream AI response
+      // Stream AI response using chat-v2 API (backend manages conversation history)
       try {
-        const textbookContext = reference
-          ? buildTextbookContext(reference)
-          : undefined;
-
-        // Convert image to data URL for the API (works for both OpenAI and Gemini)
-        let apiImageUrl: string | undefined;
-        if (currentImage) {
-          const reader = new FileReader();
-          apiImageUrl = await new Promise<string>((resolve) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(currentImage);
-          });
-        }
-
-        const assistantContent = await sendMessage(apiMessages, model, textbookContext, apiImageUrl);
+        const assistantContent = await sendMessage(content, currentSessionId ?? undefined);
 
         if (assistantContent) {
           // Add assistant message to local state
