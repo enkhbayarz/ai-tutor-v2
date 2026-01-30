@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -79,6 +79,7 @@ function groupConversationsByDate(
 
 export function ChatSidebar() {
   const { user } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -90,9 +91,13 @@ export function ChatSidebar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
-  // Convex queries and mutations
-  const conversations = useQuery(api.conversations.list);
+  // Convex queries and mutations - skip until auth is ready
+  const conversations = useQuery(
+    api.conversations.list,
+    isLoaded && isSignedIn ? {} : "skip"
+  );
   const removeConversation = useMutation(api.conversations.remove);
+  const updateTitle = useMutation(api.conversations.updateTitle);
 
   // Get active conversation ID from URL
   const activeConversationId = useMemo(() => {
@@ -117,6 +122,15 @@ export function ChatSidebar() {
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
+    }
+  };
+
+  // Handle rename conversation
+  const handleRename = async (id: Id<"conversations">, newTitle: string) => {
+    try {
+      await updateTitle({ id, title: newTitle });
+    } catch (error) {
+      console.error("Failed to rename conversation:", error);
     }
   };
 
@@ -298,11 +312,11 @@ export function ChatSidebar() {
                 {groupedConversations.today.map((chat) => (
                   <ChatItem
                     key={chat._id}
-                    id={chat._id}
                     title={chat.title}
                     href={`/${locale}/chat/c/${chat._id}`}
                     isActive={activeConversationId === chat._id}
                     onDelete={() => handleDelete(chat._id)}
+                    onRename={(newTitle) => handleRename(chat._id, newTitle)}
                   />
                 ))}
               </HistorySection>
@@ -313,11 +327,11 @@ export function ChatSidebar() {
                 {groupedConversations.last7Days.map((chat) => (
                   <ChatItem
                     key={chat._id}
-                    id={chat._id}
                     title={chat.title}
                     href={`/${locale}/chat/c/${chat._id}`}
                     isActive={activeConversationId === chat._id}
                     onDelete={() => handleDelete(chat._id)}
+                    onRename={(newTitle) => handleRename(chat._id, newTitle)}
                   />
                 ))}
               </HistorySection>
@@ -328,11 +342,11 @@ export function ChatSidebar() {
                 {groupedConversations.last30Days.map((chat) => (
                   <ChatItem
                     key={chat._id}
-                    id={chat._id}
                     title={chat.title}
                     href={`/${locale}/chat/c/${chat._id}`}
                     isActive={activeConversationId === chat._id}
                     onDelete={() => handleDelete(chat._id)}
+                    onRename={(newTitle) => handleRename(chat._id, newTitle)}
                   />
                 ))}
               </HistorySection>
@@ -343,11 +357,11 @@ export function ChatSidebar() {
                 {groupedConversations.older.map((chat) => (
                   <ChatItem
                     key={chat._id}
-                    id={chat._id}
                     title={chat.title}
                     href={`/${locale}/chat/c/${chat._id}`}
                     isActive={activeConversationId === chat._id}
                     onDelete={() => handleDelete(chat._id)}
+                    onRename={(newTitle) => handleRename(chat._id, newTitle)}
                   />
                 ))}
               </HistorySection>

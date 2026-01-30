@@ -521,6 +521,12 @@
     "noConversations": "Чат түүх байхгүй",
     "expandSidebar": "Цэс нээх",
     "collapseSidebar": "Цэс хаах",
+    "rename": "Нэр өөрчлөх",
+    "delete": "Устах",
+    "renameChat": "Чатын нэр өөрчлөх",
+    "newName": "Шинэ нэр",
+    "save": "Хадгалах",
+    "deleting": "Устгаж байна...",
     "welcomeActions": {
       "test": {
         "title": "Тест бэлдээд өгөөч",

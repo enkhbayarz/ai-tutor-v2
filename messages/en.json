@@ -521,6 +521,12 @@
     "noConversations": "No chat history",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
+    "rename": "Rename",
+    "delete": "Delete",
+    "renameChat": "Rename chat",
+    "newName": "New name",
+    "save": "Save",
+    "deleting": "Deleting...",
     "welcomeActions": {
       "test": {
         "title": "Prepare a test",
