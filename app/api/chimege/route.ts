@@ -8,6 +8,83 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const CHIMEGE_STT_URL = "https://api.chimege.com/v1.2/transcribe";
 const CHIMEGE_TTS_URL = "https://api.chimege.com/v1.2/synthesize";
 
+/**
+ * Split text into chunks at natural boundaries (sentence, comma, space)
+ * 200 chars max leaves buffer for normalization expansion (numbers → words)
+ */
+function chunkText(text: string, maxLength = 200): string[] {
+  const chunks: string[] = [];
+  let remaining = text;
+
+  while (remaining.length > 0) {
+    if (remaining.length <= maxLength) {
+      chunks.push(remaining.trim());
+      break;
+    }
+
+    // Find best break point within maxLength
+    let breakPoint = maxLength;
+    const slice = remaining.slice(0, maxLength);
+
+    // Priority: sentence end > comma > space
+    const sentenceEnd = Math.max(
+      slice.lastIndexOf(". "),
+      slice.lastIndexOf("! "),
+      slice.lastIndexOf("? ")
+    );
+    if (sentenceEnd > maxLength * 0.5) {
+      breakPoint = sentenceEnd + 2;
+    } else {
+      const comma = slice.lastIndexOf(", ");
+      if (comma > maxLength * 0.5) {
+        breakPoint = comma + 2;
+      } else {
+        const space = slice.lastIndexOf(" ");
+        if (space > 0) breakPoint = space + 1;
+      }
+    }
+
+    chunks.push(remaining.slice(0, breakPoint).trim());
+    remaining = remaining.slice(breakPoint);
+  }
+
+  return chunks.filter((c) => c.length > 0);
+}
+
+/**
+ * Concatenate multiple WAV audio buffers into one
+ * WAV header is 44 bytes - keep first header, skip rest, update sizes
+ */
+function concatenateWavBuffers(buffers: ArrayBuffer[]): ArrayBuffer {
+  if (buffers.length === 0) return new ArrayBuffer(0);
+  if (buffers.length === 1) return buffers[0];
+
+  const headerSize = 44;
+  const totalDataSize =
+    buffers.reduce((sum, buf) => sum + buf.byteLength - headerSize, 0) +
+    headerSize;
+
+  const result = new Uint8Array(totalDataSize);
+
+  // Copy first buffer with header
+  result.set(new Uint8Array(buffers[0]), 0);
+  let offset = buffers[0].byteLength;
+
+  // Append data from remaining buffers (skip their headers)
+  for (let i = 1; i < buffers.length; i++) {
+    const data = new Uint8Array(buffers[i]).slice(headerSize);
+    result.set(data, offset);
+    offset += data.byteLength;
+  }
+
+  // Update file size in header (bytes 4-7) and data size (bytes 40-43)
+  const view = new DataView(result.buffer);
+  view.setUint32(4, totalDataSize - 8, true); // File size - 8
+  view.setUint32(40, totalDataSize - 44, true); // Data size
+
+  return result.buffer;
+}
+
 async function normalizeText(
   text: string,
   ttsToken: string,
@@ -136,7 +213,7 @@ async function handleTTS(request: NextRequest) {
   if (!apiKey) {
     return NextResponse.json(
       { error: "CHIMEGE_TTS_KEY not configured" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 
@@ -146,49 +223,60 @@ async function handleTTS(request: NextRequest) {
       return NextResponse.json({ error: "No text provided" }, { status: 400 });
     }
 
-    // // Chimege TTS has a character limit
-    // const truncated = text.slice(0, 300);
+    // Split into chunks (200 chars max, leaving buffer for normalization)
+    const chunks = chunkText(text, 200);
+    console.log(`[TTS] Processing ${chunks.length} chunks from ${text.length} chars`);
 
-    const normalizedText = await normalizeText(text, apiKey);
+    const audioBuffers: ArrayBuffer[] = [];
 
-    if (!normalizedText) {
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      console.log(`[TTS] Chunk ${i + 1}/${chunks.length}: ${chunk.length} chars`);
+
+      // Normalize
+      const normalized = await normalizeText(chunk, apiKey);
+      if (!normalized) {
+        console.error(`[TTS] Normalization failed for chunk ${i + 1}`);
+        continue;
+      }
+
+      console.log(`[TTS] Chunk ${i + 1} normalized: ${normalized.length} chars`);
+
+      // Synthesize
+      const response = await fetch("https://api.chimege.com/v1.2/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "plain/text", Token: apiKey },
+        body: normalized,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `[TTS] Synthesis failed for chunk ${i + 1}:`,
+          response.status,
+          errorText
+        );
+        continue;
+      }
+
+      audioBuffers.push(await response.arrayBuffer());
+    }
+
+    if (audioBuffers.length === 0) {
       return NextResponse.json(
-        { error: "Text normalization failed" },
-        { status: 500 },
+        { error: "TTS failed for all chunks" },
+        { status: 500 }
       );
     }
 
-    console.log("[TTS] Normalized text:", normalizedText.substring(0, 200));
+    // Concatenate all WAV buffers
+    const combined = concatenateWavBuffers(audioBuffers);
     console.log(
-      "[TTS] Normalized text length:",
-      normalizedText.length,
-      "chars",
+      `[TTS] Combined ${audioBuffers.length} audio chunks into ${combined.byteLength} bytes`
     );
 
-    const response = await fetch("https://api.chimege.com/v1.2/synthesize", {
-      method: "POST",
-      headers: {
-        "Content-Type": "plain/text",
-        Token: apiKey,
-      },
-      body: normalizedText,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Chimege TTS error:", response.status, errorText);
-      return NextResponse.json(
-        { error: `TTS failed: ${response.status}` },
-        { status: response.status },
-      );
-    }
-
-    const audioBuffer = await response.arrayBuffer();
-    return new Response(audioBuffer, {
-      headers: {
-        "Content-Type": "audio/wav",
-        "Cache-Control": "no-cache",
-      },
+    return new Response(combined, {
+      headers: { "Content-Type": "audio/wav", "Cache-Control": "no-cache" },
     });
   } catch (error) {
     console.error("TTS error:", error);
