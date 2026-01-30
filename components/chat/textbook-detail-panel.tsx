@@ -52,7 +52,7 @@ export function TextbookDetailPanel({
 
   if (!textbook) {
     return (
-      <div className="flex h-full w-80 flex-col border-l bg-white">
+      <div className="flex h-full w-80 flex-col rounded-3xl bg-white overflow-hidden">
         <div className="flex h-32 items-center justify-center">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
         </div>
@@ -65,7 +65,7 @@ export function TextbookDetailPanel({
   );
 
   return (
-    <div className="flex h-full w-80 flex-col border-l bg-white">
+    <div className="flex h-full w-80 flex-col rounded-3xl bg-white overflow-hidden">
       {/* Back button */}
       <div className="border-b px-4 py-3">
         <button

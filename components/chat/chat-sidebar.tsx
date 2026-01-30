@@ -125,7 +125,7 @@ export function ChatSidebar() {
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "hidden lg:flex flex-col h-screen bg-white py-4 transition-all duration-300",
+          "hidden lg:flex flex-col h-screen bg-[#F9FAFF] py-4 transition-all duration-300",
           expanded ? "w-64 items-start px-4" : "w-16 items-center",
         )}
       >

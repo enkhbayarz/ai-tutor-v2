@@ -206,9 +206,9 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const hasMessages = messages.length > 0 || isStreaming;
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full gap-4">
       {/* Main chat area */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col rounded-3xl bg-white overflow-hidden">
         {hasMessages ? (
           <>
             <ChatContainer

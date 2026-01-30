@@ -6,7 +6,7 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { BookOpen, X } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { TextbookCard } from "./textbook-card";
 
 interface TextbookPanelProps {
@@ -40,18 +40,17 @@ export function TextbookPanel({ onCollapse, onTextbookClick }: TextbookPanelProp
   );
 
   return (
-    <div className="flex h-full w-72 flex-col border-l bg-white">
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-4 py-3">
-        <BookOpen className="h-4 w-4 text-purple-500" />
-        <span className="flex-1 text-sm font-medium text-gray-800">
-          {t("textbooks")}
-        </span>
+    <div className="flex h-full w-72 flex-col rounded-3xl bg-white overflow-hidden">
+      {/* Header - pill style */}
+      <div className="flex items-center justify-center px-4 py-4">
         <button
           onClick={onCollapse}
-          className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100"
+          className="flex items-center gap-2 rounded-full border border-purple-200 bg-white px-6 py-3 hover:bg-purple-50 transition-colors"
         >
-          <X className="h-4 w-4 text-gray-400" />
+          <BookOpen className="h-5 w-5 text-purple-500" />
+          <span className="text-sm font-medium text-purple-600">
+            {t("textbooks")}
+          </span>
         </button>
       </div>
 

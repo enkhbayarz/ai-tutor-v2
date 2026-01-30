@@ -13,12 +13,10 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-[#f8f9fa]">
       <ChatSidebar />
       <main className="flex-1 overflow-hidden p-4">
-        <div className="h-full rounded-3xl bg-[#f8f9fa] overflow-hidden">
-          {children}
-        </div>
+        {children}
       </main>
     </div>
   );

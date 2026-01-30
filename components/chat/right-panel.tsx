@@ -44,7 +44,7 @@ export function RightPanel({
   // Collapsed: circle buttons
   if (view === "collapsed") {
     return (
-      <div className="flex h-full w-20 flex-col items-center gap-4 border-l bg-white py-4">
+      <div className="flex h-full w-20 flex-col items-center gap-4 rounded-3xl bg-white py-4">
         <button
           onClick={onClose}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
@@ -80,7 +80,7 @@ export function RightPanel({
   // Quick action: two rows
   if (view === "quick-action") {
     return (
-      <div className="flex h-full w-72 flex-col border-l bg-white">
+      <div className="flex h-full w-72 flex-col rounded-3xl bg-white overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2 border-b px-4 py-3">
           <button
