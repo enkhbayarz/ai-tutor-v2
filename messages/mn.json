@@ -513,6 +513,13 @@
     "models": {
       "openai": "GPT-4o",
       "gemini": "Gemini"
-    }
+    },
+    "today": "Өнөөдөр",
+    "last7Days": "Сүүлийн 7 хоног",
+    "last30Days": "Сүүлийн 30 хоног",
+    "older": "Хуучин",
+    "noConversations": "Чат түүх байхгүй",
+    "expandSidebar": "Цэс нээх",
+    "collapseSidebar": "Цэс хаах"
   }
 }

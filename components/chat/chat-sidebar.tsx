@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import {
   PenSquare,
-  Clock,
   PanelLeft,
   Settings,
   HelpCircle,
@@ -31,33 +34,106 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ProfileSettingsDialog } from "@/components/common/profile-settings-dialog";
 import { HelpDialog } from "@/components/common/help-dialog";
-import { HistoryPanel } from "./history-panel";
+import { HistorySection } from "./history-section";
+import { ChatItem } from "./chat-item";
+
+// Helper to group conversations by date
+function groupConversationsByDate(
+  conversations: Array<{
+    _id: Id<"conversations">;
+    title: string;
+    updatedAt: number;
+  }>,
+) {
+  const now = Date.now();
+  const oneDay = 24 * 60 * 60 * 1000;
+  const sevenDays = 7 * oneDay;
+  const thirtyDays = 30 * oneDay;
+
+  const today: typeof conversations = [];
+  const last7Days: typeof conversations = [];
+  const last30Days: typeof conversations = [];
+  const older: typeof conversations = [];
+
+  // Get start of today
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const todayStart = startOfToday.getTime();
+
+  for (const conv of conversations) {
+    const age = now - conv.updatedAt;
+
+    if (conv.updatedAt >= todayStart) {
+      today.push(conv);
+    } else if (age < sevenDays) {
+      last7Days.push(conv);
+    } else if (age < thirtyDays) {
+      last30Days.push(conv);
+    } else {
+      older.push(conv);
+    }
+  }
+
+  return { today, last7Days, last30Days, older };
+}
 
 export function ChatSidebar() {
   const { user } = useUser();
   const locale = useLocale();
+  const pathname = usePathname();
+  const router = useRouter();
   const t = useTranslations("chat");
   const tNav = useTranslations("nav");
   const tCommon = useTranslations("common");
+
   const [expanded, setExpanded] = useState(false);
   const [showExpandIcon, setShowExpandIcon] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Convex queries and mutations
+  const conversations = useQuery(api.conversations.list);
+  const removeConversation = useMutation(api.conversations.remove);
+
+  // Get active conversation ID from URL
+  const activeConversationId = useMemo(() => {
+    const match = pathname.match(/\/chat\/c\/([^/]+)/);
+    return match ? match[1] : null;
+  }, [pathname]);
+
+  // Group conversations by date
+  const groupedConversations = useMemo(() => {
+    if (!conversations)
+      return { today: [], last7Days: [], last30Days: [], older: [] };
+    return groupConversationsByDate(conversations);
+  }, [conversations]);
+
+  // Handle delete conversation
+  const handleDelete = async (id: Id<"conversations">) => {
+    try {
+      await removeConversation({ id });
+      // If we deleted the active conversation, navigate to new chat
+      if (activeConversationId === id) {
+        router.push(`/${locale}/chat`);
+      }
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
+    }
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "hidden lg:flex flex-col h-screen bg-white border-r py-4 transition-all duration-300",
-          expanded ? "w-64 items-start px-4" : "w-16 items-center"
+          "hidden lg:flex flex-col h-screen bg-white py-4 transition-all duration-300",
+          expanded ? "w-64 items-start px-4" : "w-16 items-center",
         )}
       >
         {/* Logo / Expand Button */}
         <div
           className={cn(
-            "relative mb-8 flex items-center",
-            expanded ? "w-full justify-between" : "justify-center"
+            "relative mb-4 flex items-center shrink-0",
+            expanded ? "w-full justify-between" : "justify-center",
           )}
           onMouseEnter={() => setShowExpandIcon(true)}
           onMouseLeave={() => setShowExpandIcon(false)}
@@ -82,7 +158,7 @@ export function ChatSidebar() {
               onClick={() => setExpanded(!expanded)}
               className={cn(
                 "flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer",
-                !expanded && "absolute -right-2 top-1/2 -translate-y-1/2"
+                !expanded && "absolute -right-2 top-1/2 -translate-y-1/2",
               )}
             >
               <PanelLeft className={cn("w-5 h-5", expanded && "rotate-180")} />
@@ -90,9 +166,8 @@ export function ChatSidebar() {
           )}
         </div>
 
-        {/* Navigation */}
-        <nav className={cn("flex-1 flex flex-col gap-2", expanded && "w-full")}>
-          {/* New Chat */}
+        {/* New Chat Button */}
+        <div className={cn("shrink-0 mb-2", expanded && "w-full")}>
           {expanded ? (
             <Link
               href={`/${locale}/chat`}
@@ -111,46 +186,103 @@ export function ChatSidebar() {
                   <PenSquare className="w-5 h-5" />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={12} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium">
+              <TooltipContent
+                side="right"
+                sideOffset={12}
+                className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium"
+              >
                 {t("newChat")}
               </TooltipContent>
             </Tooltip>
           )}
+        </div>
 
-          {/* History */}
-          {expanded ? (
-            <button
-              onClick={() => setHistoryOpen(true)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
-            >
-              <Clock className="w-5 h-5" />
-              <span className="font-medium">{t("history")}</span>
-            </button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setHistoryOpen(true)}
-                  className="flex items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
-                >
-                  <Clock className="w-5 h-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={12} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium">
-                {t("history")}
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </nav>
+        {/* Chat History (embedded) */}
+        {expanded ? (
+          <nav className="flex-1 overflow-y-auto w-full min-h-0">
+            {groupedConversations.today.length > 0 && (
+              <HistorySection title={t("today")} defaultOpen>
+                {groupedConversations.today.map((chat) => (
+                  <ChatItem
+                    key={chat._id}
+                    id={chat._id}
+                    title={chat.title}
+                    href={`/${locale}/chat/c/${chat._id}`}
+                    isActive={activeConversationId === chat._id}
+                    onDelete={() => handleDelete(chat._id)}
+                  />
+                ))}
+              </HistorySection>
+            )}
+
+            {groupedConversations.last7Days.length > 0 && (
+              <HistorySection title={t("last7Days")} defaultOpen>
+                {groupedConversations.last7Days.map((chat) => (
+                  <ChatItem
+                    key={chat._id}
+                    id={chat._id}
+                    title={chat.title}
+                    href={`/${locale}/chat/c/${chat._id}`}
+                    isActive={activeConversationId === chat._id}
+                    onDelete={() => handleDelete(chat._id)}
+                  />
+                ))}
+              </HistorySection>
+            )}
+
+            {groupedConversations.last30Days.length > 0 && (
+              <HistorySection title={t("last30Days")} defaultOpen={false}>
+                {groupedConversations.last30Days.map((chat) => (
+                  <ChatItem
+                    key={chat._id}
+                    id={chat._id}
+                    title={chat.title}
+                    href={`/${locale}/chat/c/${chat._id}`}
+                    isActive={activeConversationId === chat._id}
+                    onDelete={() => handleDelete(chat._id)}
+                  />
+                ))}
+              </HistorySection>
+            )}
+
+            {groupedConversations.older.length > 0 && (
+              <HistorySection title={t("older")} defaultOpen={false}>
+                {groupedConversations.older.map((chat) => (
+                  <ChatItem
+                    key={chat._id}
+                    id={chat._id}
+                    title={chat.title}
+                    href={`/${locale}/chat/c/${chat._id}`}
+                    isActive={activeConversationId === chat._id}
+                    onDelete={() => handleDelete(chat._id)}
+                  />
+                ))}
+              </HistorySection>
+            )}
+
+            {/* Empty state */}
+            {conversations && conversations.length === 0 && (
+              <div className="text-center py-8 text-gray-500 text-sm">
+                {t("noConversations")}
+              </div>
+            )}
+          </nav>
+        ) : (
+          // Collapsed: clickable area to expand
+          <div
+            className="flex-1 w-full cursor-pointer"
+            onClick={() => setExpanded(true)}
+          />
+        )}
 
         {/* User Profile */}
-        <div className={cn("mt-auto pt-4 px-2", expanded && "w-full")}>
+        <div className={cn("mt-auto pt-4 shrink-0", expanded && "w-full px-2")}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(
                   "flex items-center cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors",
-                  expanded ? "gap-3 w-full" : "justify-center"
+                  expanded ? "gap-3 w-full" : "justify-center",
                 )}
               >
                 <Avatar className="w-10 h-10">
@@ -232,7 +364,6 @@ export function ChatSidebar() {
           onOpenChange={setSettingsOpen}
         />
         <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
-        <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} />
       </aside>
     </TooltipProvider>
   );
