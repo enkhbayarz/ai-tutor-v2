@@ -116,7 +116,7 @@ export function ChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}

@@ -35,7 +35,7 @@ export function WelcomeQuickActions({ onAction }: WelcomeQuickActionsProps) {
   const t = useTranslations("chat.welcomeActions");
 
   return (
-    <div className="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
       {QUICK_ACTIONS.map((action) => {
         const Icon = action.icon;
         return (
