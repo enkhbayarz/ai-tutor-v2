@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { ChatMessage, Message } from "./chat-message";
 import { ScrollToBottom } from "./scroll-to-bottom";
+import { TypingIndicator } from "./typing-indicator";
 
 interface ChatContainerProps {
   messages: Message[];
@@ -62,6 +63,7 @@ export function ChatContainer({
           {messages.map((msg) => (
             <ChatMessage key={msg.id} message={msg} />
           ))}
+          {isStreaming && !streamingContent && <TypingIndicator />}
           {isStreaming && streamingContent && (
             <ChatMessage
               message={{
