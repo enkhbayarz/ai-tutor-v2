@@ -49,10 +49,10 @@ export function RightPanel({
         {/* Book circle button */}
         <button
           onClick={() => setView("quick-action")}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-purple-200 bg-purple-50 text-purple-600 transition-colors hover:bg-purple-100"
+          className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-purple-200 bg-purple-50 text-purple-600 transition-colors hover:bg-purple-100"
         >
-          <BookOpen className="h-6 w-6" />
-          <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] text-gray-500">
+          <BookOpen className="h-5 w-5" />
+          <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] text-gray-500">
             +
           </span>
         </button>
@@ -60,10 +60,10 @@ export function RightPanel({
         {/* Mic circle button */}
         <button
           onClick={() => setView("quick-action")}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-blue-200 bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+          className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-blue-200 bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
         >
-          <Mic className="h-6 w-6" />
-          <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] text-gray-500">
+          <Mic className="h-5 w-5" />
+          <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] text-gray-500">
             +
           </span>
         </button>
