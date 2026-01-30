@@ -15,7 +15,7 @@ export default function ChatLayout({
   return (
     <div className="flex h-screen bg-[#f8f9fa]">
       <ChatSidebar />
-      <main className="flex-1 overflow-hidden p-4">
+      <main className="flex-1 bg-[#F9FAFF] overflow-hidden p-4">
         {children}
       </main>
     </div>

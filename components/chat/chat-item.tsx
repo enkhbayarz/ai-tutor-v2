@@ -32,7 +32,7 @@ export function ChatItem({
   return (
     <div
       className={cn(
-        "group relative flex items-center rounded-lg transition-colors",
+        "group relative flex items-center rounded-md transition-colors",
         isActive ? "bg-blue-50" : "hover:bg-gray-50"
       )}
       onMouseEnter={() => setShowMenu(true)}
@@ -41,7 +41,7 @@ export function ChatItem({
       <Link
         href={href}
         className={cn(
-          "flex-1 px-3 py-2 text-sm truncate",
+          "flex-1 px-3 py-1.5 text-sm truncate",
           isActive ? "text-blue-700 font-medium" : "text-gray-700"
         )}
       >

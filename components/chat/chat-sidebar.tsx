@@ -284,17 +284,17 @@ export function ChatSidebar() {
           <div className="shrink-0 mb-2">
             <Link
               href={`/${locale}/chat`}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
+              className="flex items-center gap-2 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <PenSquare className="w-5 h-5" />
-              <span className="font-medium">{t("newChat")}</span>
+              <span className="font-semibold">{t("newChat")}</span>
             </Link>
           </div>
 
           {/* Chat history (scrollable) */}
-          <nav className="flex-1 overflow-y-auto min-h-0">
+          <nav className="flex-1 overflow-y-auto min-h-0 mt-2">
             {groupedConversations.today.length > 0 && (
-              <HistorySection title={t("today")} defaultOpen>
+              <HistorySection title={t("today")}>
                 {groupedConversations.today.map((chat) => (
                   <ChatItem
                     key={chat._id}
@@ -309,7 +309,7 @@ export function ChatSidebar() {
             )}
 
             {groupedConversations.last7Days.length > 0 && (
-              <HistorySection title={t("last7Days")} defaultOpen>
+              <HistorySection title={t("last7Days")} defaultOpen={false}>
                 {groupedConversations.last7Days.map((chat) => (
                   <ChatItem
                     key={chat._id}

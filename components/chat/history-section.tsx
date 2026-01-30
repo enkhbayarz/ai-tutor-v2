@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 interface HistorySectionProps {
   title: string;
@@ -21,17 +20,16 @@ export function HistorySection({
     <div className="mb-2">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 w-full px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex items-center justify-between w-full py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
       >
-        <ChevronDown
-          className={cn(
-            "w-3 h-3 transition-transform",
-            !isOpen && "-rotate-90"
-          )}
-        />
-        {title}
+        <span>{title}</span>
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4 text-gray-400" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-gray-400" />
+        )}
       </button>
-      {isOpen && <div className="space-y-0.5">{children}</div>}
+      {isOpen && <div className="space-y-0.5 mt-1">{children}</div>}
     </div>
   );
 }
