@@ -11,16 +11,12 @@ import { TextbookReference } from "./chat-view";
 type PanelView = "collapsed" | "quick-action" | "textbook-list" | "textbook-detail";
 
 interface RightPanelProps {
-  open: boolean;
-  onClose: () => void;
   selectedTextbookId: Id<"textbooks"> | null;
   onSelectTextbook: (id: Id<"textbooks"> | null) => void;
   onSetReference: (ref: TextbookReference) => void;
 }
 
 export function RightPanel({
-  open,
-  onClose,
   selectedTextbookId,
   onSelectTextbook,
   onSetReference,
@@ -28,8 +24,6 @@ export function RightPanel({
   const t = useTranslations("chat");
   const [view, setView] = useState<PanelView>("collapsed");
   const [detailId, setDetailId] = useState<Id<"textbooks"> | null>(null);
-
-  if (!open) return null;
 
   const handleTextbookClick = (id: Id<"textbooks">) => {
     setDetailId(id);
@@ -46,7 +40,7 @@ export function RightPanel({
     return (
       <div className="flex h-full w-20 flex-col items-center gap-4 rounded-3xl bg-white py-4">
         <button
-          onClick={onClose}
+          onClick={() => setView("quick-action")}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
         >
           <ArrowLeft className="h-4 w-4" />

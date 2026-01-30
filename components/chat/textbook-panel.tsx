@@ -42,10 +42,10 @@ export function TextbookPanel({ onCollapse, onTextbookClick }: TextbookPanelProp
   return (
     <div className="flex h-full w-72 flex-col rounded-3xl bg-white overflow-hidden">
       {/* Header - pill style */}
-      <div className="flex items-center justify-center px-4 py-4">
+      <div className="px-4 py-4">
         <button
           onClick={onCollapse}
-          className="flex items-center gap-2 rounded-full border border-purple-200 bg-white px-6 py-3 hover:bg-purple-50 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-purple-200 bg-white px-6 py-3 hover:bg-purple-50 transition-colors"
         >
           <BookOpen className="h-5 w-5 text-purple-500" />
           <span className="text-sm font-medium text-purple-600">

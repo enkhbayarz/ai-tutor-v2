@@ -31,7 +31,6 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const { user } = useUser();
   const [model, setModel] = useState<ModelType>("openai");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [panelOpen, setPanelOpen] = useState(true);
   const [selectedTextbookId, setSelectedTextbookId] = useState<Id<"textbooks"> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -267,8 +266,6 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
       {/* Right panel */}
       <RightPanel
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
         selectedTextbookId={selectedTextbookId}
         onSelectTextbook={setSelectedTextbookId}
         onSetReference={setReference}
