@@ -3,12 +3,14 @@
 import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Send, ChevronDown, Paperclip, X } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Mic, MicOff, Send, Paperclip, X } from "lucide-react";
+// Model selector imports - commented out
+// import { ChevronDown } from "lucide-react";
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useVoiceInput } from "@/hooks/use-voice-input";
 import { VoiceIndicator } from "./voice-indicator";
@@ -26,10 +28,11 @@ interface ChatInputProps {
   onImageChange?: (file: File | null) => void;
 }
 
-const MODEL_LABELS: Record<ModelType, string> = {
-  openai: "GPT",
-  gemini: "Gemini",
-};
+// Model selector labels - commented out
+// const MODEL_LABELS: Record<ModelType, string> = {
+//   openai: "GPT",
+//   gemini: "Gemini",
+// };
 
 export function ChatInput({
   onSend,
@@ -45,14 +48,17 @@ export function ChatInput({
   const [internalMessage, setInternalMessage] = useState("");
   const message = value !== undefined ? value : internalMessage;
   const setMessage = onValueChange || setInternalMessage;
-  const [modelOpen, setModelOpen] = useState(false);
+  // const [modelOpen, setModelOpen] = useState(false); // Model selector - commented out
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const handleTranscript = useCallback((text: string) => {
-    const current = value !== undefined ? value : internalMessage;
-    setMessage(current ? current + " " + text : text);
-  }, [value, internalMessage, setMessage]);
+  const handleTranscript = useCallback(
+    (text: string) => {
+      const current = value !== undefined ? value : internalMessage;
+      setMessage(current ? current + " " + text : text);
+    },
+    [value, internalMessage, setMessage],
+  );
 
   const {
     isRecording,
@@ -121,7 +127,7 @@ export function ChatInput({
       />
 
       {/* Mic selector when multiple devices available */}
-      {devices.length > 1 && !isRecording && !isProcessing && (
+      {/* {devices.length > 1 && !isRecording && !isProcessing && (
         <div className="mb-2 flex justify-center">
           <select
             value={selectedDeviceId}
@@ -135,7 +141,7 @@ export function ChatInput({
             ))}
           </select>
         </div>
-      )}
+      )} */}
 
       {/* Voice indicator */}
       {(isRecording || isProcessing) && (
@@ -170,7 +176,7 @@ export function ChatInput({
       )}
 
       <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm">
-        {/* Model Selector */}
+        {/* Model Selector - commented out
         <Popover open={modelOpen} onOpenChange={setModelOpen}>
           <PopoverTrigger asChild>
             <button
@@ -206,6 +212,7 @@ export function ChatInput({
             ))}
           </PopoverContent>
         </Popover>
+        */}
 
         {/* Paperclip Button */}
         <Button
@@ -236,7 +243,7 @@ export function ChatInput({
           size="icon"
           className={cn(
             "h-8 w-8 shrink-0",
-            isRecording && "text-red-500 animate-pulse"
+            isRecording && "text-red-500 animate-pulse",
           )}
           onClick={handleMicClick}
           disabled={disabled || isProcessing}

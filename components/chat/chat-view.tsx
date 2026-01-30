@@ -12,6 +12,7 @@ import { Message } from "./chat-message";
 import { RightPanel } from "./right-panel";
 import { QuickActionButtons } from "./quick-action-buttons";
 import { ReferenceChip } from "./reference-chip";
+import { WelcomeQuickActions } from "./welcome-quick-actions";
 import { useChatStream } from "@/hooks/use-chat-stream";
 
 export interface TextbookReference {
@@ -259,6 +260,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 imageFile={imageFile}
                 onImageChange={setImageFile}
               />
+              <WelcomeQuickActions onAction={setInputValue} />
             </div>
           </div>
         )}

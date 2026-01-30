@@ -520,6 +520,23 @@
     "older": "Хуучин",
     "noConversations": "Чат түүх байхгүй",
     "expandSidebar": "Цэс нээх",
-    "collapseSidebar": "Цэс хаах"
+    "collapseSidebar": "Цэс хаах",
+    "welcomeActions": {
+      "test": {
+        "title": "Тест бэлдээд өгөөч",
+        "description": "Сэдвээр тест бэлдэж өгнө"
+      },
+      "lesson": {
+        "title": "Хичээлийн төлөвлөгөө гарга",
+        "description": "Хичээлийн төлөвлөгөө боловсруулна"
+      },
+      "exercise": {
+        "title": "Дасгал ажил",
+        "description": "Дасгал ажил бэлдэж өгнө"
+      },
+      "testPrompt": "Надад тест бэлдээд өгөөч",
+      "lessonPrompt": "Хичээлийн төлөвлөгөө гаргаж өгөөч",
+      "exercisePrompt": "Дасгал ажил бэлдээд өгөөч"
+    }
   }
 }

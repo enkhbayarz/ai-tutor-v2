@@ -520,6 +520,23 @@
     "older": "Older",
     "noConversations": "No chat history",
     "expandSidebar": "Expand sidebar",
-    "collapseSidebar": "Collapse sidebar"
+    "collapseSidebar": "Collapse sidebar",
+    "welcomeActions": {
+      "test": {
+        "title": "Prepare a test",
+        "description": "Prepare a test on a topic"
+      },
+      "lesson": {
+        "title": "Create lesson plan",
+        "description": "Create a lesson plan"
+      },
+      "exercise": {
+        "title": "Exercise work",
+        "description": "Prepare exercise work"
+      },
+      "testPrompt": "Please prepare a test for me",
+      "lessonPrompt": "Please create a lesson plan",
+      "exercisePrompt": "Please prepare exercise work"
+    }
   }
 }
