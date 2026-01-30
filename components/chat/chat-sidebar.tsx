@@ -87,7 +87,6 @@ export function ChatSidebar() {
   const tCommon = useTranslations("common");
 
   const [expanded, setExpanded] = useState(false);
-  const [showExpandIcon, setShowExpandIcon] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
@@ -121,54 +120,168 @@ export function ChatSidebar() {
     }
   };
 
+  // User dropdown menu content (reused in both views)
+  const UserDropdownContent = (
+    <DropdownMenuContent
+      align="start"
+      side="top"
+      sideOffset={8}
+      className="w-56 ml-2"
+    >
+      <div className="flex items-center gap-3 p-3">
+        <Avatar className="w-12 h-12">
+          <AvatarImage
+            src={user?.imageUrl}
+            alt={user?.fullName || "User"}
+          />
+          <AvatarFallback>
+            {user?.firstName?.charAt(0) || "U"}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-gray-900 truncate">
+            {user?.fullName || tCommon("defaultManager")}
+          </p>
+          <p className="text-sm text-gray-500 truncate">
+            {user?.primaryEmailAddress?.emailAddress ||
+              tCommon("defaultEmail")}
+          </p>
+        </div>
+      </div>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setSettingsOpen(true)}
+      >
+        <Settings className="w-4 h-4" />
+        {tNav("settings")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setHelpOpen(true)}
+      >
+        <HelpCircle className="w-4 h-4" />
+        {tNav("help")}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <SignOutButton redirectUrl={`/${locale}/sign-in`}>
+        <DropdownMenuItem className="cursor-pointer">
+          <LogOut className="w-4 h-4" />
+          {tNav("logout")}
+        </DropdownMenuItem>
+      </SignOutButton>
+    </DropdownMenuContent>
+  );
+
   return (
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "hidden lg:flex flex-col h-screen bg-[#F9FAFF] py-4 transition-all duration-300",
-          expanded ? "w-64 items-start px-4" : "w-16 items-center",
+          "relative hidden lg:flex flex-col h-screen bg-[#F9FAFF] py-4",
+          "transition-[width] duration-300 ease-out",
+          expanded ? "w-64 px-4" : "w-12"
         )}
       >
-        {/* Logo / Expand Button */}
+        {/* Rail View - Collapsed */}
         <div
           className={cn(
-            "relative mb-4 flex items-center shrink-0",
-            expanded ? "w-full justify-between" : "justify-center",
+            "absolute inset-0 flex flex-col items-center py-4",
+            "transition-opacity duration-150",
+            expanded ? "opacity-0 pointer-events-none" : "opacity-100"
           )}
-          onMouseEnter={() => setShowExpandIcon(true)}
-          onMouseLeave={() => setShowExpandIcon(false)}
         >
-          <Link href={`/${locale}/chat`} className="flex items-center gap-2">
-            <Image
-              src="/logo_ai.png"
-              alt="AI Tutor"
-              width={32}
-              height={32}
-              className="w-8 h-8"
-            />
-            {expanded && (
+          {/* PanelLeft toggle at top */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setExpanded(true)}
+                className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+              >
+                <PanelLeft className="w-5 h-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="right"
+              sideOffset={12}
+              className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium"
+            >
+              {t("expandSidebar")}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* New chat button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={`/${locale}/chat`}
+                className="flex items-center justify-center w-10 h-10 mt-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <PenSquare className="w-5 h-5" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent
+              side="right"
+              sideOffset={12}
+              className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium"
+            >
+              {t("newChat")}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* User avatar */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center justify-center cursor-pointer hover:bg-gray-100 rounded-xl p-2 transition-colors">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage
+                    src={user?.imageUrl}
+                    alt={user?.fullName || "User"}
+                  />
+                  <AvatarFallback>
+                    {user?.firstName?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            {UserDropdownContent}
+          </DropdownMenu>
+        </div>
+
+        {/* Expanded View */}
+        <div
+          className={cn(
+            "flex flex-col h-full w-full",
+            "transition-opacity duration-150",
+            expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
+        >
+          {/* Header: Logo + collapse toggle */}
+          <div className="flex items-center justify-between mb-4 shrink-0">
+            <Link href={`/${locale}/chat`} className="flex items-center gap-2">
+              <Image
+                src="/logo_ai.png"
+                alt="AI Tutor"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
               <span className="font-semibold text-gray-900">
                 {tCommon("appName")}
               </span>
-            )}
-          </Link>
-
-          {(showExpandIcon || expanded) && (
+            </Link>
             <button
-              onClick={() => setExpanded(!expanded)}
-              className={cn(
-                "flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer",
-                !expanded && "absolute -right-2 top-1/2 -translate-y-1/2",
-              )}
+              onClick={() => setExpanded(false)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
             >
-              <PanelLeft className={cn("w-5 h-5", expanded && "rotate-180")} />
+              <PanelLeft className="w-5 h-5 rotate-180" />
             </button>
-          )}
-        </div>
+          </div>
 
-        {/* New Chat Button */}
-        <div className={cn("shrink-0 mb-2", expanded && "w-full")}>
-          {expanded ? (
+          {/* New chat button (full width) */}
+          <div className="shrink-0 mb-2">
             <Link
               href={`/${locale}/chat`}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
@@ -176,30 +289,10 @@ export function ChatSidebar() {
               <PenSquare className="w-5 h-5" />
               <span className="font-medium">{t("newChat")}</span>
             </Link>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href={`/${locale}/chat`}
-                  className="flex items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer"
-                >
-                  <PenSquare className="w-5 h-5" />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent
-                side="right"
-                sideOffset={12}
-                className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium"
-              >
-                {t("newChat")}
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
+          </div>
 
-        {/* Chat History (embedded) */}
-        {expanded ? (
-          <nav className="flex-1 overflow-y-auto w-full min-h-0">
+          {/* Chat history (scrollable) */}
+          <nav className="flex-1 overflow-y-auto min-h-0">
             {groupedConversations.today.length > 0 && (
               <HistorySection title={t("today")} defaultOpen>
                 {groupedConversations.today.map((chat) => (
@@ -267,34 +360,21 @@ export function ChatSidebar() {
               </div>
             )}
           </nav>
-        ) : (
-          // Collapsed: clickable area to expand
-          <div
-            className="flex-1 w-full cursor-pointer"
-            onClick={() => setExpanded(true)}
-          />
-        )}
 
-        {/* User Profile */}
-        <div className={cn("mt-auto pt-4 shrink-0", expanded && "w-full px-2")}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "flex items-center cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors",
-                  expanded ? "gap-3 w-full" : "justify-center",
-                )}
-              >
-                <Avatar className="w-10 h-10">
-                  <AvatarImage
-                    src={user?.imageUrl}
-                    alt={user?.fullName || "User"}
-                  />
-                  <AvatarFallback>
-                    {user?.firstName?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                {expanded && (
+          {/* User profile */}
+          <div className="mt-auto pt-4 shrink-0 px-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 w-full cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage
+                      src={user?.imageUrl}
+                      alt={user?.fullName || "User"}
+                    />
+                    <AvatarFallback>
+                      {user?.firstName?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1 min-w-0 text-left">
                     <p className="font-medium text-gray-900 truncate">
                       {user?.fullName || tCommon("defaultManager")}
@@ -304,59 +384,11 @@ export function ChatSidebar() {
                         tCommon("defaultEmail")}
                     </p>
                   </div>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              side="top"
-              sideOffset={8}
-              className="w-56 ml-2"
-            >
-              <div className="flex items-center gap-3 p-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage
-                    src={user?.imageUrl}
-                    alt={user?.fullName || "User"}
-                  />
-                  <AvatarFallback>
-                    {user?.firstName?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">
-                    {user?.fullName || tCommon("defaultManager")}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {user?.primaryEmailAddress?.emailAddress ||
-                      tCommon("defaultEmail")}
-                  </p>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setSettingsOpen(true)}
-              >
-                <Settings className="w-4 h-4" />
-                {tNav("settings")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setHelpOpen(true)}
-              >
-                <HelpCircle className="w-4 h-4" />
-                {tNav("help")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <SignOutButton redirectUrl={`/${locale}/sign-in`}>
-                <DropdownMenuItem className="cursor-pointer">
-                  <LogOut className="w-4 h-4" />
-                  {tNav("logout")}
-                </DropdownMenuItem>
-              </SignOutButton>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </button>
+              </DropdownMenuTrigger>
+              {UserDropdownContent}
+            </DropdownMenu>
+          </div>
         </div>
 
         <ProfileSettingsDialog
