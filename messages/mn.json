@@ -41,7 +41,11 @@
     "verificationCode": "Баталгаажуулах код",
     "verificationCodePlaceholder": "6 оронтой код",
     "verify": "Баталгаажуулах",
-    "verifying": "Баталгаажуулж байна..."
+    "verifying": "Баталгаажуулж байна...",
+    "secondFactorTitle": "Имэйл баталгаажуулалт",
+    "secondFactorSubtitle": "Имэйл рүү илгээсэн кодыг оруулна уу",
+    "secondFactorError": "Баталгаажуулах код буруу байна",
+    "backToSignIn": "Нэвтрэх хуудас руу буцах"
   },
   "teachers": {
     "title": "Багшийн бүртгэл",

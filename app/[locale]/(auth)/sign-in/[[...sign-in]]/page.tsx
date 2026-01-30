@@ -5,7 +5,7 @@ import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, KeyRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,10 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Second factor verification state
+  const [needsSecondFactor, setNeedsSecondFactor] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoaded) return;
@@ -39,6 +43,10 @@ export default function SignInPage() {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         router.push(`/${locale}`);
+      } else if (result.status === "needs_second_factor") {
+        // Prepare email code verification
+        await signIn.prepareSecondFactor({ strategy: "email_code" });
+        setNeedsSecondFactor(true);
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
@@ -47,6 +55,104 @@ export default function SignInPage() {
       setIsLoading(false);
     }
   };
+
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded || !signIn) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const result = await signIn.attemptSecondFactor({
+        strategy: "email_code",
+        code: verificationCode,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        router.push(`/${locale}`);
+      }
+    } catch (err: unknown) {
+      const clerkError = err as { errors?: { message: string }[] };
+      setError(clerkError.errors?.[0]?.message || t("secondFactorError"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Second factor verification UI
+  if (needsSecondFactor) {
+    return (
+      <div className="flex flex-col items-center">
+        {/* Logo */}
+        <Image
+          src="/logo_ai.png"
+          alt="AI Tutor Logo"
+          width={64}
+          height={64}
+          className="mb-6"
+        />
+
+        {/* Heading */}
+        <h1 className="text-2xl font-bold text-center mb-2">
+          {t("secondFactorTitle")}
+        </h1>
+        <p className="text-muted-foreground text-center mb-8">
+          {t("secondFactorSubtitle")}
+        </p>
+
+        {/* Verification Form */}
+        <form onSubmit={handleVerification} className="w-full space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* Verification Code */}
+          <div className="space-y-2">
+            <Label htmlFor="code">{t("verificationCode")}</Label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="code"
+                type="text"
+                placeholder={t("verificationCodePlaceholder")}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                className="pl-10"
+                required
+                autoComplete="one-time-code"
+              />
+            </div>
+          </div>
+
+          {/* Submit */}
+          <Button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 cursor-pointer"
+            disabled={isLoading}
+          >
+            {isLoading ? t("verifying") : t("verify")}
+          </Button>
+        </form>
+
+        {/* Back to sign in */}
+        <button
+          type="button"
+          onClick={() => {
+            setNeedsSecondFactor(false);
+            setVerificationCode("");
+            setError("");
+          }}
+          className="mt-4 text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+        >
+          {t("backToSignIn")}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center">

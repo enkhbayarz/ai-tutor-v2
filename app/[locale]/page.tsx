@@ -6,5 +6,5 @@ type Props = {
 
 export default async function LocaleHome({ params }: Props) {
   const { locale } = await params;
-  redirect(`/${locale}/teacher-info`);
+  redirect(`/${locale}/chat`);
 }

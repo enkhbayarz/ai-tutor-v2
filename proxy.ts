@@ -10,8 +10,12 @@ const intlMiddleware = createMiddleware({
 });
 
 const isPublicRoute = createRouteMatcher([
+  "/",
+  "/:locale",
   "/:locale/sign-in(.*)",
   "/:locale/sign-up(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
   "/api/webhooks(.*)",
 ]);
 
@@ -35,25 +39,22 @@ const isExcludedFromLocale = (pathname: string) => {
 export default clerkMiddleware(async (auth, request: NextRequest) => {
   const pathname = request.nextUrl.pathname;
 
-  // Protect API routes that require auth
-  if (isProtectedApi(request)) {
-    await auth.protect();
-  }
-
   // Skip locale middleware for monitoring/api routes
   if (isExcludedFromLocale(pathname)) {
+    // Protect API routes that require auth
+    if (isProtectedApi(request)) {
+      await auth.protect();
+    }
     return NextResponse.next();
   }
 
-  // Run next-intl middleware for locale handling
-  const response = intlMiddleware(request);
-
-  // Protect non-public routes
+  // Protect non-public routes BEFORE locale middleware
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
 
-  return response;
+  // Run next-intl middleware for locale handling
+  return intlMiddleware(request);
 });
 
 export const config = {

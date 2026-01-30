@@ -41,7 +41,11 @@
     "verificationCode": "Verification Code",
     "verificationCodePlaceholder": "6-digit code",
     "verify": "Verify",
-    "verifying": "Verifying..."
+    "verifying": "Verifying...",
+    "secondFactorTitle": "Email Verification",
+    "secondFactorSubtitle": "Enter the code sent to your email",
+    "secondFactorError": "Invalid verification code",
+    "backToSignIn": "Back to sign in"
   },
   "teachers": {
     "title": "Teacher Registration",
