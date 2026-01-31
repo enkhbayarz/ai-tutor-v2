@@ -24,7 +24,7 @@ async function generateBackendToken(role: string = "student"): Promise<string> {
     user_id: DEFAULT_USER_ID,
     school_id: DEFAULT_SCHOOL_ID,
     class_ids: [DEFAULT_CLASS_ID],
-    role: "teacher",
+    role: role,
     name: "Test Student",
     iss: "main-backend",
   })
