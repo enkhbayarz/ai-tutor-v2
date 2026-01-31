@@ -2,8 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { SignJWT } from "jose";
 
-const AI_BACKEND_URL =
-  process.env.AI_BACKEND_URL || "http://54.254.248.49:9090";
+const AI_BACKEND_URL = process.env.AI_BACKEND_URL;
 const AI_BACKEND_SECRET =
   process.env.AI_BACKEND_SECRET || "my-super-secret-key-12345";
 
@@ -25,7 +24,7 @@ async function generateBackendToken(role: string = "student"): Promise<string> {
     user_id: DEFAULT_USER_ID,
     school_id: DEFAULT_SCHOOL_ID,
     class_ids: [DEFAULT_CLASS_ID],
-    role: role,
+    role: "teacher",
     name: "Test Student",
     iss: "main-backend",
   })
