@@ -4,6 +4,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import PDFParser from "pdf2json";
+import { PDFDocument } from "pdf-lib";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { cleanMongolianText } from "@/lib/utils/clean-mongolian-text";
 
@@ -51,7 +52,7 @@ Rules:
 - Keep original Mongolian text for titles
 - If no clear TOC structure found, return {"chapters": []}`;
 
-// Extract TOC using Gemini
+// Extract TOC using Gemini (text-based)
 async function extractTocWithLLM(tocText: string): Promise<Chapter[]> {
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -67,9 +68,85 @@ async function extractTocWithLLM(tocText: string): Promise<Chapter[]> {
     },
   });
 
-  console.log("=== RESULT ===");
+  console.log("=== LLM RESULT ===");
   console.log(result.response.text());
-  console.log("=== END RESULT ===");
+  console.log("=== END LLM RESULT ===");
+
+  const content = result.response.text() || '{"chapters":[]}';
+  const parsed = JSON.parse(content);
+
+  // Add UUIDs to chapters and topics
+  return (parsed.chapters || []).map(
+    (ch: Omit<Chapter, "id" | "topics"> & { topics: Omit<Topic, "id">[] }) => ({
+      id: crypto.randomUUID(),
+      order: ch.order,
+      title: ch.title,
+      description: ch.description,
+      topics: (ch.topics || []).map((t: Omit<Topic, "id">) => ({
+        id: crypto.randomUUID(),
+        order: t.order,
+        title: t.title,
+        page: t.page,
+      })),
+    })
+  );
+}
+
+// Extract first N pages from PDF to reduce memory usage
+async function extractFirstNPages(
+  pdfBuffer: Buffer,
+  n: number
+): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.load(pdfBuffer);
+  const newPdf = await PDFDocument.create();
+  const pageCount = Math.min(n, pdfDoc.getPageCount());
+
+  const pages = await newPdf.copyPages(
+    pdfDoc,
+    Array.from({ length: pageCount }, (_, i) => i)
+  );
+  pages.forEach((page) => newPdf.addPage(page));
+
+  return Buffer.from(await newPdf.save());
+}
+
+// Extract TOC using Gemini Vision (for scanned/image-based PDFs)
+// Gemini can process PDF files directly
+async function extractTocWithVision(pdfBuffer: Buffer): Promise<Chapter[]> {
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+  // Convert PDF buffer to base64
+  const pdfBase64 = pdfBuffer.toString("base64");
+  console.log(`=== VISION: Processing PDF (${(pdfBuffer.length / 1024).toFixed(0)} KB) ===`);
+
+  const result = await model.generateContent({
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: "Extract the Table of Contents from this Mongolian textbook PDF:" },
+          {
+            inlineData: {
+              mimeType: "application/pdf",
+              data: pdfBase64,
+            },
+          },
+        ],
+      },
+    ],
+    systemInstruction: {
+      role: "user",
+      parts: [{ text: TOC_EXTRACTION_PROMPT }],
+    },
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  console.log("=== VISION RESULT ===");
+  console.log(result.response.text());
+  console.log("=== END VISION RESULT ===");
 
   const content = result.response.text() || '{"chapters":[]}';
   const parsed = JSON.parse(content);
@@ -198,22 +275,35 @@ export async function POST(request: NextRequest) {
     // 3. Fetch PDF content
     const response = await fetch(textbook.pdfUrl);
     const pdfBuffer = Buffer.from(await response.arrayBuffer());
+    console.log(`=== PDF size: ${(pdfBuffer.length / 1024 / 1024).toFixed(2)} MB ===`);
 
-    // 4. Extract TOC pages (first 6 pages) and extract with LLM
-    const { text: tocText } = await extractTextFromPdf(pdfBuffer, 6);
+    // 4. Extract first 6 pages only (saves memory for large PDFs)
+    console.log("=== Extracting first 6 pages ===");
+    const first6PagesPdf = await extractFirstNPages(pdfBuffer, 6);
+    console.log(`=== First 6 pages PDF size: ${(first6PagesPdf.length / 1024 / 1024).toFixed(2)} MB ===`);
+
+    // 5. Try text extraction first
+    const { text: tocText } = await extractTextFromPdf(first6PagesPdf);
     const cleanedTocText = cleanMongolianText(tocText);
-    console.log("=== CLEANED TOC TEXT (First 6 pages) ===");
+    console.log("=== CLEANED TOC TEXT ===");
     console.log(cleanedTocText);
-    console.log("=== END CLEANED TOC TEXT ===");
-
-    // 5. Extract TOC using LLM
-    const tableOfContents = await extractTocWithLLM(cleanedTocText);
+    console.log(`=== Text length: ${cleanedTocText.trim().length} chars ===`);
+    
+    // 6. Extract TOC - use vision fallback if text extraction failed
+    let tableOfContents: Chapter[];
+    if (cleanedTocText.trim().length < 100) {
+      console.log("=== Text extraction failed, using Gemini Vision ===");
+      tableOfContents = await extractTocWithVision(first6PagesPdf);
+    } else {
+      console.log("=== Using text-based LLM extraction ===");
+      tableOfContents = await extractTocWithLLM(cleanedTocText);
+    }
     console.log("=== EXTRACTED TOC ===");
     console.log(JSON.stringify(tableOfContents, null, 2));
     console.log("=== END EXTRACTED TOC ===");
 
-    // 6. Extract full text using pdf2json
-    const { text, pageCount } = await extractTextFromPdf(pdfBuffer);
+    // 7. Extract full text (use first 6 pages for now to avoid memory issues)
+    const { text, pageCount } = await extractTextFromPdf(first6PagesPdf);
     const cleanedText = cleanMongolianText(text);
 
     // 6. Save extracted text and TOC
