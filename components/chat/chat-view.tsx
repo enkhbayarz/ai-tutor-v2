@@ -51,6 +51,9 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
   const recordInteraction = useMutation(api.learningInteractions.record);
 
+  // Load current user for role-based UI
+  const currentUser = useQuery(api.users.getCurrentUser);
+
   // Load existing conversation data
   const conversation = useQuery(
     api.conversations.get,
@@ -260,7 +263,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 imageFile={imageFile}
                 onImageChange={setImageFile}
               />
-              <WelcomeQuickActions onAction={setInputValue} />
+              <WelcomeQuickActions onAction={setInputValue} userRole={currentUser?.role} />
             </div>
           </div>
         )}

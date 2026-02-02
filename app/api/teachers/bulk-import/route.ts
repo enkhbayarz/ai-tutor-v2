@@ -63,6 +63,14 @@ async function processRow(
       username,
     });
 
+    // Also create user record with role for role-based UI
+    await convex.mutation(api.users.createFromAdmin, {
+      clerkId: clerkUser.id,
+      displayName: `${row.lastName} ${row.firstName}`.trim(),
+      username,
+      role: "teacher",
+    });
+
     return {
       rowIndex,
       success: true,

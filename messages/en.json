@@ -47,7 +47,9 @@
     "secondFactorTitle": "Email Verification",
     "secondFactorSubtitle": "Enter the code sent to your email",
     "secondFactorError": "Invalid verification code",
-    "backToSignIn": "Back to sign in"
+    "backToSignIn": "Back to sign in",
+    "loading": "Loading...",
+    "redirecting": "Redirecting..."
   },
   "teachers": {
     "title": "Teacher Registration",
@@ -571,21 +573,40 @@
     "save": "Save",
     "deleting": "Deleting...",
     "welcomeActions": {
-      "test": {
-        "title": "Prepare a test",
-        "description": "Prepare a test on a topic"
+      "student": {
+        "lesson": {
+          "title": "Learn my lesson",
+          "description": "Get detailed guidance and explanations on any topic, study at your own pace"
+        },
+        "example": {
+          "title": "Explain with an example",
+          "description": "Get difficult formulas and rules explained through simple, memorable examples"
+        },
+        "practice": {
+          "title": "Test my knowledge",
+          "description": "Refresh what you learned and confirm your understanding with Q&A"
+        },
+        "lessonPrompt": "Learn my lesson",
+        "examplePrompt": "Explain with an example",
+        "practicePrompt": "Test my knowledge"
       },
-      "lesson": {
-        "title": "Create lesson plan",
-        "description": "Create a lesson plan"
-      },
-      "exercise": {
-        "title": "Exercise work",
-        "description": "Prepare exercise work"
-      },
-      "testPrompt": "Please prepare a test for me",
-      "lessonPrompt": "Please create a lesson plan",
-      "exercisePrompt": "Please prepare exercise work"
+      "teacher": {
+        "test": {
+          "title": "Prepare a test",
+          "description": "Prepare a test on a topic"
+        },
+        "lesson": {
+          "title": "Create lesson plan",
+          "description": "Create a lesson plan"
+        },
+        "exercise": {
+          "title": "Exercise work",
+          "description": "Prepare exercise work"
+        },
+        "testPrompt": "Please prepare a test for me",
+        "lessonPrompt": "Please create a lesson plan",
+        "exercisePrompt": "Please prepare exercise work"
+      }
     }
   }
 }

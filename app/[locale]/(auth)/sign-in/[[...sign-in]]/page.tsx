@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useSignIn } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
+import { useSignIn, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, User, Lock, KeyRound } from "lucide-react";
+import { Eye, EyeOff, User, Lock, KeyRound, Loader2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,17 @@ import { Label } from "@/components/ui/label";
 
 export default function SignInPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("auth");
+
+  // Redirect if already signed in
+  useEffect(() => {
+    if (authLoaded && isSignedIn) {
+      router.push(`/${locale}/chat`);
+    }
+  }, [authLoaded, isSignedIn, router, locale]);
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -49,8 +57,20 @@ export default function SignInPage() {
         setNeedsSecondFactor(true);
       }
     } catch (err: unknown) {
-      const clerkError = err as { errors?: { message: string }[] };
-      setError(clerkError.errors?.[0]?.message || t("signInError"));
+      const clerkError = err as { errors?: { message: string; code?: string }[] };
+      const errorMessage = clerkError.errors?.[0]?.message || "";
+      const errorCode = clerkError.errors?.[0]?.code || "";
+
+      // If session already exists, redirect to chat
+      if (
+        errorMessage.toLowerCase().includes("session") ||
+        errorCode === "session_exists"
+      ) {
+        router.push(`/${locale}/chat`);
+        return;
+      }
+
+      setError(errorMessage || t("signInError"));
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +100,18 @@ export default function SignInPage() {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking auth or redirecting
+  if (!authLoaded || isSignedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[300px]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <p className="mt-4 text-sm text-muted-foreground">
+          {isSignedIn ? t("redirecting") : t("loading")}
+        </p>
+      </div>
+    );
+  }
 
   // Second factor verification UI
   if (needsSecondFactor) {

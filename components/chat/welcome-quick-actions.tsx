@@ -1,13 +1,42 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Settings2, ListTodo, FileText } from "lucide-react";
+import { Settings2, ListTodo, FileText, GraduationCap, Lightbulb, ClipboardCheck } from "lucide-react";
+
+type UserRole = "admin" | "teacher" | "student" | undefined;
 
 interface WelcomeQuickActionsProps {
   onAction: (prompt: string) => void;
+  userRole?: UserRole;
 }
 
-const QUICK_ACTIONS = [
+// Student-focused learning actions (pink, green, purple)
+const STUDENT_ACTIONS = [
+  {
+    id: "lesson",
+    icon: GraduationCap,
+    color: "bg-pink-100",
+    iconColor: "text-pink-500",
+    promptKey: "lessonPrompt",
+  },
+  {
+    id: "example",
+    icon: Lightbulb,
+    color: "bg-green-100",
+    iconColor: "text-green-500",
+    promptKey: "examplePrompt",
+  },
+  {
+    id: "practice",
+    icon: ClipboardCheck,
+    color: "bg-purple-100",
+    iconColor: "text-purple-500",
+    promptKey: "practicePrompt",
+  },
+] as const;
+
+// Teacher-focused teaching actions (blue, purple, orange)
+const TEACHER_ACTIONS = [
   {
     id: "test",
     icon: Settings2,
@@ -31,12 +60,17 @@ const QUICK_ACTIONS = [
   },
 ] as const;
 
-export function WelcomeQuickActions({ onAction }: WelcomeQuickActionsProps) {
-  const t = useTranslations("chat.welcomeActions");
+export function WelcomeQuickActions({ onAction, userRole }: WelcomeQuickActionsProps) {
+  // Determine which actions and translation prefix to use based on role
+  const isStudent = userRole === "student";
+  const actions = isStudent ? STUDENT_ACTIONS : TEACHER_ACTIONS;
+  const translationPrefix = isStudent ? "student" : "teacher";
+
+  const t = useTranslations(`chat.welcomeActions.${translationPrefix}`);
 
   return (
     <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
-      {QUICK_ACTIONS.map((action) => {
+      {actions.map((action) => {
         const Icon = action.icon;
         return (
           <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -21,6 +21,28 @@ export function TextbookPanel({ onCollapse, onTextbookClick }: TextbookPanelProp
   const t = useTranslations("chat");
   const [grade, setGrade] = useState<number | undefined>(undefined);
   const [subject, setSubject] = useState<string | undefined>(undefined);
+  const gradeInitializedRef = useRef(false);
+
+  // Query student/teacher record to get user's grade
+  const studentRecord = useQuery(
+    api.students.getByClerkId,
+    user?.id ? { clerkId: user.id } : "skip"
+  );
+  const teacherRecord = useQuery(
+    api.teachers.getByClerkId,
+    user?.id ? { clerkId: user.id } : "skip"
+  );
+
+  // Auto-select grade based on user's student/teacher record
+  useEffect(() => {
+    if (gradeInitializedRef.current) return;
+
+    const userGrade = studentRecord?.grade || teacherRecord?.grade;
+    if (userGrade) {
+      setGrade(userGrade);
+      gradeInitializedRef.current = true;
+    }
+  }, [studentRecord?.grade, teacherRecord?.grade]);
 
   const textbooks = useQuery(api.textbooks.listActive, {
     grade,

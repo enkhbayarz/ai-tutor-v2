@@ -138,6 +138,43 @@ export const setRole = mutation({
   },
 });
 
+// Create user from admin (when creating teachers/students with Clerk)
+export const createFromAdmin = mutation({
+  args: {
+    clerkId: v.string(),
+    displayName: v.string(),
+    username: v.optional(v.string()),
+    role: v.union(v.literal("teacher"), v.literal("student")),
+  },
+  handler: async (ctx, args) => {
+    // Check if user already exists
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+
+    if (existing) {
+      // Update role if not set
+      if (!existing.role) {
+        await ctx.db.patch(existing._id, {
+          role: args.role,
+          updatedAt: Date.now(),
+        });
+      }
+      return existing._id;
+    }
+
+    // Create new user with role
+    return await ctx.db.insert("users", {
+      clerkId: args.clerkId,
+      displayName: args.displayName,
+      username: args.username,
+      role: args.role,
+      createdAt: Date.now(),
+    });
+  },
+});
+
 // Internal mutation for webhook (optional)
 export const upsertFromClerk = internalMutation({
   args: {

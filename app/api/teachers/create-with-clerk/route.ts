@@ -120,6 +120,14 @@ export async function POST(
       username,
     });
 
+    // Also create user record with role for role-based UI
+    await convex.mutation(api.users.createFromAdmin, {
+      clerkId: clerkUser.id,
+      displayName: `${data.lastName} ${data.firstName}`.trim(),
+      username,
+      role: "teacher",
+    });
+
     return NextResponse.json({
       success: true,
       username,

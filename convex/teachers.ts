@@ -21,6 +21,17 @@ export const getById = query({
   },
 });
 
+// Get teacher by Clerk ID (for current user's grade lookup)
+export const getByClerkId = query({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("teachers")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+  },
+});
+
 // Create a teacher (admin only)
 export const create = mutation({
   args: {
