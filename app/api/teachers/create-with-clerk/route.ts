@@ -16,8 +16,6 @@ const clerkClient = createClerkClient({
 interface CreateTeacherRequest {
   lastName: string;
   firstName: string;
-  grade: number;
-  group: string;
   phone1: string;
   phone2?: string;
 }
@@ -64,7 +62,7 @@ export async function POST(
     // Parse request body
     const data: CreateTeacherRequest = await request.json();
 
-    if (!data.lastName || !data.firstName || !data.grade || !data.group || !data.phone1) {
+    if (!data.lastName || !data.firstName || !data.phone1) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
@@ -112,8 +110,6 @@ export async function POST(
     const teacherId = await convex.mutation(api.teachers.createWithClerk, {
       lastName: data.lastName.trim(),
       firstName: data.firstName.trim(),
-      grade: data.grade,
-      group: data.group,
       phone1: data.phone1.trim(),
       phone2: data.phone2?.trim(),
       clerkId: clerkUser.id,

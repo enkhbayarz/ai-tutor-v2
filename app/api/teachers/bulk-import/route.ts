@@ -7,7 +7,7 @@ import {
   generateStudentUsername,
   generateStudentPassword,
 } from "@/lib/student-credentials/generate-credentials";
-import { type BulkImportRow } from "@/lib/validations/bulk-import";
+import { type TeacherBulkImportRow } from "@/lib/validations/teacher-bulk-import";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const clerkClient = createClerkClient({
@@ -30,7 +30,7 @@ const BATCH_SIZE = 10;
 const BATCH_DELAY_MS = 1000;
 
 async function processRow(
-  row: BulkImportRow,
+  row: TeacherBulkImportRow,
   rowIndex: number,
   username: string,
   tempPassword: string,
@@ -55,8 +55,6 @@ async function processRow(
     const teacherId = await convex.mutation(api.teachers.createWithClerk, {
       lastName: row.lastName,
       firstName: row.firstName,
-      grade: row.grade,
-      group: row.group,
       phone1: row.phone1,
       phone2: row.phone2,
       clerkId: clerkUser.id,
@@ -136,7 +134,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const { rows } = (await request.json()) as { rows: BulkImportRow[] };
+    const { rows } = (await request.json()) as { rows: TeacherBulkImportRow[] };
 
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json(

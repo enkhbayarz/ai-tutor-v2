@@ -22,8 +22,6 @@ export default defineSchema({
   teachers: defineTable({
     lastName: v.string(),
     firstName: v.string(),
-    grade: v.number(), // 1-12
-    group: v.string(), // А, Б, В, Г, Д, etc.
     phone1: v.string(),
     phone2: v.optional(v.string()),
     // Optional for backward compatibility with existing data
@@ -35,7 +33,6 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index("by_grade", ["grade"])
     .index("by_status", ["status"])
     .index("by_clerk_id", ["clerkId"]),
 

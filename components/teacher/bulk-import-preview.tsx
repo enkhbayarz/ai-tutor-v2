@@ -2,20 +2,18 @@
 
 import { CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { BulkImportRow, ValidationError } from "@/lib/validations/bulk-import";
-import type { ParsedRow } from "@/lib/bulk-import/parse-file";
+import type { TeacherBulkImportRow, TeacherValidationError } from "@/lib/validations/teacher-bulk-import";
+import type { TeacherParsedRow } from "@/lib/bulk-import/teacher-parse-file";
 
 interface BulkImportPreviewProps {
-  rows: ParsedRow[];
-  validRows: BulkImportRow[];
-  errors: ValidationError[];
+  rows: TeacherParsedRow[];
+  validRows: TeacherBulkImportRow[];
+  errors: TeacherValidationError[];
   validIndices: number[];
   labels: {
     rowNumber: string;
     lastName: string;
     firstName: string;
-    grade: string;
-    group: string;
     phone1: string;
     phone2: string;
     status: string;
@@ -31,7 +29,7 @@ export function BulkImportPreview({
   labels,
 }: BulkImportPreviewProps) {
   // Group errors by row index
-  const errorsByRow = new Map<number, ValidationError[]>();
+  const errorsByRow = new Map<number, TeacherValidationError[]>();
   errors.forEach((error) => {
     if (!errorsByRow.has(error.rowIndex)) {
       errorsByRow.set(error.rowIndex, []);
@@ -54,12 +52,6 @@ export function BulkImportPreview({
             </th>
             <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
               {labels.firstName}
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
-              {labels.grade}
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
-              {labels.group}
             </th>
             <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
               {labels.phone1}
@@ -106,24 +98,6 @@ export function BulkImportPreview({
                   )}
                 >
                   {row.firstName || "-"}
-                </td>
-                <td
-                  className={cn(
-                    "px-3 py-2",
-                    errorFields.has("grade") &&
-                      "text-red-600 dark:text-red-400 font-medium"
-                  )}
-                >
-                  {row.grade || "-"}
-                </td>
-                <td
-                  className={cn(
-                    "px-3 py-2",
-                    errorFields.has("group") &&
-                      "text-red-600 dark:text-red-400 font-medium"
-                  )}
-                >
-                  {row.group || "-"}
                 </td>
                 <td
                   className={cn(

@@ -25,8 +25,8 @@ import { ZodSchema } from "zod";
 export interface PersonFormData {
   lastName: string;
   firstName: string;
-  grade: string;
-  group: string;
+  grade?: string;
+  group?: string;
   phone1: string;
   phone2: string;
 }
@@ -47,6 +47,7 @@ const initialFormData: PersonFormData = {
 
 interface PersonFormDialogProps {
   mode: "add" | "edit";
+  entityType: "teacher" | "student";
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: ReactNode;
@@ -64,10 +65,10 @@ interface PersonFormDialogProps {
     lastNamePlaceholder: string;
     firstName: string;
     firstNamePlaceholder: string;
-    grade: string;
-    selectGrade: string;
-    group: string;
-    selectGroup: string;
+    grade?: string;
+    selectGrade?: string;
+    group?: string;
+    selectGroup?: string;
     phone1: string;
     phone2: string;
     phonePlaceholder: string;
@@ -82,6 +83,7 @@ interface PersonFormDialogProps {
 
 export function PersonFormDialog({
   mode,
+  entityType,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   trigger,
@@ -92,6 +94,7 @@ export function PersonFormDialog({
   labels,
   translateValidation,
 }: PersonFormDialogProps) {
+  const showGradeGroup = entityType === "student";
   const [internalOpen, setInternalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -255,62 +258,64 @@ export function PersonFormDialog({
           )}
         </div>
 
-        {/* Grade and Group Row */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Grade */}
-          <div className="space-y-2">
-            <Label>
-              {labels.grade} <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.grade}
-              onValueChange={(value) => handleFieldChange("grade", value)}
-            >
-              <SelectTrigger
-                className={`w-full ${errors.grade ? "border-red-500" : ""}`}
+        {/* Grade and Group Row - Only shown for students */}
+        {showGradeGroup && (
+          <div className="grid grid-cols-2 gap-4">
+            {/* Grade */}
+            <div className="space-y-2">
+              <Label>
+                {labels.grade} <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.grade || ""}
+                onValueChange={(value) => handleFieldChange("grade", value)}
               >
-                <SelectValue placeholder={labels.selectGrade} />
-              </SelectTrigger>
-              <SelectContent>
-                {GRADES.map((grade) => (
-                  <SelectItem key={grade} value={grade.toString()}>
-                    {grade}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.grade && (
-              <p className="text-sm text-red-500">{errors.grade}</p>
-            )}
-          </div>
+                <SelectTrigger
+                  className={`w-full ${errors.grade ? "border-red-500" : ""}`}
+                >
+                  <SelectValue placeholder={labels.selectGrade} />
+                </SelectTrigger>
+                <SelectContent>
+                  {GRADES.map((grade) => (
+                    <SelectItem key={grade} value={grade.toString()}>
+                      {grade}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.grade && (
+                <p className="text-sm text-red-500">{errors.grade}</p>
+              )}
+            </div>
 
-          {/* Group */}
-          <div className="space-y-2">
-            <Label>
-              {labels.group} <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.group}
-              onValueChange={(value) => handleFieldChange("group", value)}
-            >
-              <SelectTrigger
-                className={`w-full ${errors.group ? "border-red-500" : ""}`}
+            {/* Group */}
+            <div className="space-y-2">
+              <Label>
+                {labels.group} <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.group || ""}
+                onValueChange={(value) => handleFieldChange("group", value)}
               >
-                <SelectValue placeholder={labels.selectGroup} />
-              </SelectTrigger>
-              <SelectContent>
-                {GROUPS.map((group) => (
-                  <SelectItem key={group} value={group}>
-                    {group}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.group && (
-              <p className="text-sm text-red-500">{errors.group}</p>
-            )}
+                <SelectTrigger
+                  className={`w-full ${errors.group ? "border-red-500" : ""}`}
+                >
+                  <SelectValue placeholder={labels.selectGroup} />
+                </SelectTrigger>
+                <SelectContent>
+                  {GROUPS.map((group) => (
+                    <SelectItem key={group} value={group}>
+                      {group}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.group && (
+                <p className="text-sm text-red-500">{errors.group}</p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Phone 1 */}
         <div className="space-y-2">

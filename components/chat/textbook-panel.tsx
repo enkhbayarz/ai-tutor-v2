@@ -23,26 +23,23 @@ export function TextbookPanel({ onCollapse, onTextbookClick }: TextbookPanelProp
   const [subject, setSubject] = useState<string | undefined>(undefined);
   const gradeInitializedRef = useRef(false);
 
-  // Query student/teacher record to get user's grade
+  // Query student record to get user's grade (only students have grade auto-filtering)
   const studentRecord = useQuery(
     api.students.getByClerkId,
     user?.id ? { clerkId: user.id } : "skip"
   );
-  const teacherRecord = useQuery(
-    api.teachers.getByClerkId,
-    user?.id ? { clerkId: user.id } : "skip"
-  );
 
-  // Auto-select grade based on user's student/teacher record
+  // Auto-select grade based on user's student record (teachers see all textbooks)
   useEffect(() => {
     if (gradeInitializedRef.current) return;
 
-    const userGrade = studentRecord?.grade || teacherRecord?.grade;
+    // Only auto-filter by grade for students
+    const userGrade = studentRecord?.grade;
     if (userGrade) {
       setGrade(userGrade);
       gradeInitializedRef.current = true;
     }
-  }, [studentRecord?.grade, teacherRecord?.grade]);
+  }, [studentRecord?.grade]);
 
   const textbooks = useQuery(api.textbooks.listActive, {
     grade,

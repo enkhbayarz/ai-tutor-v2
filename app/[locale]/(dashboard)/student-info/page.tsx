@@ -19,9 +19,15 @@ import {
   PersonFormData,
   DeleteDialog,
 } from "@/components/shared";
-import { studentFormSchema, VALIDATION_LIMITS } from "@/lib/validations/student";
+import {
+  studentFormSchema,
+  VALIDATION_LIMITS,
+} from "@/lib/validations/student";
 import { exportToExcel } from "@/lib/export-excel";
-import { BulkImportDialog, StudentCredentialsDialog } from "@/components/student";
+import {
+  BulkImportDialog,
+  StudentCredentialsDialog,
+} from "@/components/student";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -61,11 +67,15 @@ export default function StudentInfoPage() {
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [studentToEdit, setStudentToEdit] = useState<ConvexStudent | null>(null);
+  const [studentToEdit, setStudentToEdit] = useState<ConvexStudent | null>(
+    null
+  );
 
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [studentToDelete, setStudentToDelete] = useState<ConvexStudent | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<ConvexStudent | null>(
+    null
+  );
 
   // Credentials dialog state (shown after successful student creation)
   const [credentialsDialogOpen, setCredentialsDialogOpen] = useState(false);
@@ -97,14 +107,16 @@ export default function StudentInfoPage() {
   });
 
   // Transform to table format
-  const filteredStudents: TableStudent[] = filteredConvexStudents.map((student) => ({
-    id: student._id,
-    name: `${student.lastName} ${student.firstName}`,
-    phone: student.phone1,
-    username: student.firstName.toLowerCase(),
-    className: `${student.grade}${student.group}`,
-    password: "********",
-  }));
+  const filteredStudents: TableStudent[] = filteredConvexStudents.map(
+    (student) => ({
+      id: student._id,
+      name: `${student.lastName} ${student.firstName}`,
+      phone: student.phone1,
+      username: student.firstName.toLowerCase(),
+      className: `${student.grade}${student.group}`,
+      password: "********",
+    })
+  );
 
   // Pagination
   const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE) || 1;
@@ -124,9 +136,7 @@ export default function StudentInfoPage() {
     {
       key: "name",
       label: t("student"),
-      render: (item) => (
-        <AvatarCell name={item.name} subtitle={item.phone} />
-      ),
+      render: (item) => <AvatarCell name={item.name} subtitle={item.phone} />,
       className: "pl-6",
     },
     {
@@ -165,6 +175,11 @@ export default function StudentInfoPage() {
   };
 
   const handleAddSubmit = async (data: PersonFormData) => {
+    // For students, grade and group are always required (enforced by validation)
+    if (!data.grade || !data.group) {
+      throw new Error("Grade and group are required");
+    }
+
     const response = await fetch("/api/students/create-with-clerk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -196,6 +211,11 @@ export default function StudentInfoPage() {
 
   const handleEditSubmit = async (data: PersonFormData) => {
     if (!studentToEdit) return;
+    // For students, grade and group are always required (enforced by validation)
+    if (!data.grade || !data.group) {
+      throw new Error("Grade and group are required");
+    }
+
     await updateStudent({
       id: studentToEdit._id,
       lastName: data.lastName.trim(),
@@ -260,11 +280,20 @@ export default function StudentInfoPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="outline" size="sm" className="rounded-full px-4" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full px-4"
+              disabled
+            >
               <Download className="w-4 h-4 mr-2" />
               {t("exportExcel")}
             </Button>
-            <Button size="sm" className="bg-blue-500 rounded-full px-4" disabled>
+            <Button
+              size="sm"
+              className="bg-blue-500 rounded-full px-4"
+              disabled
+            >
               <Plus className="w-4 h-4 mr-2" />
               {t("addStudent")}
             </Button>
@@ -374,18 +403,25 @@ export default function StudentInfoPage() {
       {/* Add Student Dialog */}
       <PersonFormDialog
         mode="add"
+        entityType="student"
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSubmit={handleAddSubmit}
         validationSchema={studentFormSchema}
         validationLimits={VALIDATION_LIMITS}
         labels={formLabels}
-        translateValidation={(key, params) => tForm(key, params as Record<string, string | number | Date> | undefined)}
+        translateValidation={(key, params) =>
+          tForm(
+            key,
+            params as Record<string, string | number | Date> | undefined
+          )
+        }
       />
 
       {/* Edit Student Dialog */}
       <PersonFormDialog
         mode="edit"
+        entityType="student"
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         initialData={
@@ -404,7 +440,12 @@ export default function StudentInfoPage() {
         validationSchema={studentFormSchema}
         validationLimits={VALIDATION_LIMITS}
         labels={editFormLabels}
-        translateValidation={(key, params) => tForm(key, params as Record<string, string | number | Date> | undefined)}
+        translateValidation={(key, params) =>
+          tForm(
+            key,
+            params as Record<string, string | number | Date> | undefined
+          )
+        }
       />
 
       {/* Delete Confirmation Dialog */}

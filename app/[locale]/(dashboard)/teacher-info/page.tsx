@@ -12,7 +12,6 @@ import {
   DataTable,
   AvatarCell,
   Column,
-  EntityFilters,
   EmptyState,
   TableSkeleton,
   PersonFormDialog,
@@ -29,8 +28,6 @@ interface ConvexTeacher {
   _id: Id<"teachers">;
   lastName: string;
   firstName: string;
-  grade: number;
-  group: string;
   phone1: string;
   phone2?: string;
 }
@@ -40,7 +37,6 @@ interface TableTeacher {
   name: string;
   phone: string;
   username: string;
-  className: string;
   password: string;
 }
 
@@ -49,8 +45,6 @@ export default function TeacherInfoPage() {
   const tForm = useTranslations("teacherForm");
   const tBulkImport = useTranslations("bulkImport");
   const [search, setSearch] = useState("");
-  const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Add dialog state
@@ -88,12 +82,7 @@ export default function TeacherInfoPage() {
     const matchesSearch =
       fullName.includes(search.toLowerCase()) ||
       teacher.firstName.toLowerCase().includes(search.toLowerCase());
-    const matchesGrade =
-      selectedGrades.length === 0 ||
-      selectedGrades.includes(teacher.grade.toString());
-    const matchesGroup =
-      selectedGroups.length === 0 || selectedGroups.includes(teacher.group);
-    return matchesSearch && matchesGrade && matchesGroup;
+    return matchesSearch;
   });
 
   // Transform to table format
@@ -102,7 +91,6 @@ export default function TeacherInfoPage() {
     name: `${teacher.lastName} ${teacher.firstName}`,
     phone: teacher.phone1,
     username: teacher.firstName.toLowerCase(),
-    className: `${teacher.grade}${teacher.group}`,
     password: "********",
   }));
 
@@ -117,7 +105,7 @@ export default function TeacherInfoPage() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedGrades, selectedGroups]);
+  }, [search]);
 
   // Table columns
   const columns: Column<TableTeacher>[] = [
@@ -133,12 +121,6 @@ export default function TeacherInfoPage() {
       key: "username",
       label: t("username"),
       render: (item) => <span className="text-gray-600">{item.username}</span>,
-    },
-    {
-      key: "class",
-      label: t("class"),
-      render: (item) => <span className="text-gray-600">{item.className}</span>,
-      hideOnMobile: true,
     },
     {
       key: "password",
@@ -171,8 +153,6 @@ export default function TeacherInfoPage() {
       body: JSON.stringify({
         lastName: data.lastName.trim(),
         firstName: data.firstName.trim(),
-        grade: parseInt(data.grade),
-        group: data.group,
         phone1: data.phone1.trim(),
         phone2: data.phone2?.trim() || undefined,
       }),
@@ -200,8 +180,6 @@ export default function TeacherInfoPage() {
       id: teacherToEdit._id,
       lastName: data.lastName.trim(),
       firstName: data.firstName.trim(),
-      grade: parseInt(data.grade),
-      group: data.group,
       phone1: data.phone1.trim(),
       phone2: data.phone2?.trim() || undefined,
     });
@@ -217,25 +195,19 @@ export default function TeacherInfoPage() {
     const exportData = filteredConvexTeachers.map((teacher) => ({
       Овог: teacher.lastName,
       Нэр: teacher.firstName,
-      Анги: teacher.grade,
-      Бүлэг: teacher.group,
       "Утас 1": teacher.phone1,
       "Утас 2": teacher.phone2 || "",
     }));
     exportToExcel(exportData, "Багшийн_жагсаалт", "Багш нар");
   };
 
-  // Form labels
+  // Form labels (no grade/group for teachers)
   const formLabels = {
     title: tForm("title"),
     lastName: tForm("lastName"),
     lastNamePlaceholder: tForm("lastNamePlaceholder"),
     firstName: tForm("firstName"),
     firstNamePlaceholder: tForm("firstNamePlaceholder"),
-    grade: tForm("grade"),
-    selectGrade: tForm("selectGrade"),
-    group: tForm("group"),
-    selectGroup: tForm("selectGroup"),
     phone1: tForm("phone1"),
     phone2: tForm("phone2"),
     phonePlaceholder: tForm("phonePlaceholder"),
@@ -275,7 +247,6 @@ export default function TeacherInfoPage() {
           columns={[
             { label: t("teacher"), className: "pl-6" },
             { label: t("username") },
-            { label: t("class") },
             { label: t("password") },
           ]}
         />
@@ -320,22 +291,29 @@ export default function TeacherInfoPage() {
 
       <div className="border-t border-gray-200" />
 
-      {/* Filters */}
-      <EntityFilters
-        searchValue={search}
-        onSearchChange={setSearch}
-        selectedGrades={selectedGrades}
-        selectedGroups={selectedGroups}
-        onGradesChange={setSelectedGrades}
-        onGroupsChange={setSelectedGroups}
-        labels={{
-          search: t("search"),
-          filter: t("filter"),
-          grade: t("grade"),
-          group: t("group"),
-          clearFilters: t("clearFilters"),
-        }}
-      />
+      {/* Search */}
+      <div className="relative w-full sm:w-64">
+        <input
+          type="text"
+          placeholder={t("search")}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+        />
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
 
       {/* Content */}
       {filteredTeachers.length > 0 ? (
@@ -374,6 +352,7 @@ export default function TeacherInfoPage() {
       {/* Add Teacher Dialog */}
       <PersonFormDialog
         mode="add"
+        entityType="teacher"
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSubmit={handleAddSubmit}
@@ -386,6 +365,7 @@ export default function TeacherInfoPage() {
       {/* Edit Teacher Dialog */}
       <PersonFormDialog
         mode="edit"
+        entityType="teacher"
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         initialData={
@@ -393,8 +373,6 @@ export default function TeacherInfoPage() {
             ? {
                 lastName: teacherToEdit.lastName,
                 firstName: teacherToEdit.firstName,
-                grade: teacherToEdit.grade.toString(),
-                group: teacherToEdit.group,
                 phone1: teacherToEdit.phone1,
                 phone2: teacherToEdit.phone2 || "",
               }

@@ -11,13 +11,13 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import { parseFile, generateTemplate, type ParsedRow } from "@/lib/bulk-import/parse-file";
+import { parseTeacherFile, generateTeacherTemplate, type TeacherParsedRow } from "@/lib/bulk-import/teacher-parse-file";
 import {
-  validateRows,
-  findDuplicatesInBatch,
-  type BulkImportRow,
-  type ValidationError,
-} from "@/lib/validations/bulk-import";
+  validateTeacherRows,
+  findTeacherDuplicatesInBatch,
+  type TeacherBulkImportRow,
+  type TeacherValidationError,
+} from "@/lib/validations/teacher-bulk-import";
 import { BulkImportPreview } from "./bulk-import-preview";
 import { BulkImportResults } from "./bulk-import-results";
 
@@ -89,9 +89,9 @@ export function BulkImportDialog({
 }: BulkImportDialogProps) {
   const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
-  const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
-  const [validRows, setValidRows] = useState<BulkImportRow[]>([]);
-  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [parsedRows, setParsedRows] = useState<TeacherParsedRow[]>([]);
+  const [validRows, setValidRows] = useState<TeacherBulkImportRow[]>([]);
+  const [errors, setErrors] = useState<TeacherValidationError[]>([]);
   const [validIndices, setValidIndices] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<ImportResult[]>([]);
@@ -136,14 +136,14 @@ export function BulkImportDialog({
     setFile(selectedFile);
 
     try {
-      const rows = await parseFile(selectedFile);
+      const rows = await parseTeacherFile(selectedFile);
       setParsedRows(rows);
 
       // Validate rows
-      const { valid, errors: validationErrors, validIndices: validIdx } = validateRows(rows);
+      const { valid, errors: validationErrors, validIndices: validIdx } = validateTeacherRows(rows);
 
       // Check for duplicates within batch
-      const duplicates = findDuplicatesInBatch(valid);
+      const duplicates = findTeacherDuplicatesInBatch(valid);
       duplicates.forEach((message, index) => {
         validationErrors.push({
           rowIndex: validIdx[index],
@@ -177,11 +177,11 @@ export function BulkImportDialog({
   }, []);
 
   const handleDownloadTemplate = useCallback(() => {
-    const blob = generateTemplate();
+    const blob = generateTeacherTemplate();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "teacher_import_template.xlsx";
+    a.download = "bagsh_import_template.xlsx";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -357,8 +357,6 @@ export function BulkImportDialog({
                   rowNumber: labels.rowNumber,
                   lastName: labels.lastName,
                   firstName: labels.firstName,
-                  grade: labels.grade,
-                  group: labels.group,
                   phone1: labels.phone1,
                   phone2: labels.phone2,
                   status: labels.status,
