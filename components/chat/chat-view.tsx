@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useLocale } from "next-intl";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ChatWelcome } from "./chat-welcome";
 import { ChatInput, ModelType } from "./chat-input";
 import { ChatContainer } from "./chat-container";
+import { ChatSkeleton } from "./chat-skeleton";
 import { Message } from "./chat-message";
 import { RightPanel } from "./right-panel";
 import { QuickActionButtons } from "./quick-action-buttons";
@@ -30,6 +33,10 @@ interface ChatViewProps {
 
 export function ChatView({ conversationId }: ChatViewProps) {
   const { user } = useUser();
+  const locale = useLocale();
+  const searchParams = useSearchParams();
+  const resetKey = searchParams.get("t");
+
   const [model, setModel] = useState<ModelType>("openai");
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedTextbookId, setSelectedTextbookId] = useState<Id<"textbooks"> | null>(null);
@@ -42,6 +49,8 @@ export function ChatView({ conversationId }: ChatViewProps) {
   // Session ID for external AI backend (UUID format)
   const sessionIdRef = useRef<string | null>(null);
   const loadedRef = useRef(false);
+  // Track the resetKey we've processed to avoid wiping messages during URL updates
+  const prevResetKeyRef = useRef<string | null>(resetKey);
 
   const { sendMessage, isStreaming, streamingContent } = useChatStream();
 
@@ -92,6 +101,45 @@ export function ChatView({ conversationId }: ChatViewProps) {
       sessionIdRef.current = conversation.sessionId;
     }
   }, [conversation?.sessionId]);
+
+  // Reset state when navigating to an existing conversation changes
+  useEffect(() => {
+    if (conversationId) {
+      // When conversationId prop is provided, sync the ref
+      conversationIdRef.current = conversationId;
+    }
+  }, [conversationId]);
+
+  // Handle "New Chat" button - only reset when resetKey CHANGES to a new value
+  useEffect(() => {
+    // Only trigger reset when:
+    // 1. resetKey exists (we're at /chat?t=...)
+    // 2. resetKey is different from what we've already processed
+    // 3. We don't have an active conversation in progress
+    if (resetKey && resetKey !== prevResetKeyRef.current) {
+      prevResetKeyRef.current = resetKey;
+      // Force reset for new chat
+      setMessages([]);
+      conversationIdRef.current = null;
+      sessionIdRef.current = null;
+      setInputValue("");
+      setImageFile(null);
+      setReference(null);
+      loadedRef.current = false;
+    }
+  }, [resetKey]);
+
+  // Also reset when navigating directly to /chat (no conversationId and no resetKey)
+  useEffect(() => {
+    if (!conversationId && !conversationIdRef.current && !resetKey) {
+      setMessages([]);
+      sessionIdRef.current = null;
+      setInputValue("");
+      setImageFile(null);
+      setReference(null);
+      loadedRef.current = false;
+    }
+  }, [conversationId, resetKey]);
 
   // Helper to convert File to base64
   const fileToBase64 = useCallback((file: File): Promise<string> => {
@@ -159,6 +207,9 @@ export function ChatView({ conversationId }: ChatViewProps) {
           sessionId: currentSessionId,
         });
         conversationIdRef.current = convId;
+
+        // Update URL without triggering navigation (preserves component state)
+        window.history.replaceState(null, "", `/${locale}/chat/c/${convId}`);
       } else {
         await touchConversation({ id: convId });
       }
@@ -232,12 +283,31 @@ export function ChatView({ conversationId }: ChatViewProps) {
   );
 
   const hasMessages = messages.length > 0 || isStreaming;
+  // Show skeleton when loading an existing conversation
+  const isLoadingConversation = conversationId && loadedMessages === undefined;
 
   return (
     <div className="flex h-full gap-4">
       {/* Main chat area */}
       <div className="flex min-w-0 flex-1 flex-col rounded-3xl bg-white overflow-hidden">
-        {hasMessages ? (
+        {isLoadingConversation ? (
+          // Loading skeleton for existing conversations
+          <>
+            <ChatSkeleton />
+            <div className="shrink-0 px-4 pb-6 pt-2">
+              <ChatInput
+                onSend={handleSend}
+                model={model}
+                onModelChange={setModel}
+                disabled={true}
+                value={inputValue}
+                onValueChange={setInputValue}
+                imageFile={imageFile}
+                onImageChange={setImageFile}
+              />
+            </div>
+          </>
+        ) : hasMessages ? (
           <>
             <ChatContainer
               messages={messages}

@@ -227,12 +227,12 @@ export function ChatSidebar() {
           {/* New chat button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link
-                href={`/${locale}/chat`}
+              <button
+                onClick={() => router.push(`/${locale}/chat?t=${Date.now()}`)}
                 className="flex items-center justify-center w-10 h-10 mt-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
                 <PenSquare className="w-5 h-5" />
-              </Link>
+              </button>
             </TooltipTrigger>
             <TooltipContent
               side="right"
@@ -297,13 +297,13 @@ export function ChatSidebar() {
 
           {/* New chat button (full width) */}
           <div className="shrink-0 mb-2">
-            <Link
-              href={`/${locale}/chat`}
-              className="flex items-center gap-2 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+            <button
+              onClick={() => router.push(`/${locale}/chat?t=${Date.now()}`)}
+              className="flex items-center gap-2 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer w-full"
             >
               <PenSquare className="w-5 h-5" />
               <span className="font-semibold">{t("newChat")}</span>
-            </Link>
+            </button>
           </div>
 
           {/* Chat history (scrollable) */}
