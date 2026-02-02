@@ -68,6 +68,11 @@ export function WelcomeQuickActions({ onAction, userRole }: WelcomeQuickActionsP
 
   const t = useTranslations(`chat.welcomeActions.${translationPrefix}`);
 
+  const handleClick = (action: typeof actions[number]) => {
+    // All actions send the prompt directly - AI handles conversationally
+    onAction(t(action.promptKey));
+  };
+
   return (
     <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
       {actions.map((action) => {
@@ -75,7 +80,7 @@ export function WelcomeQuickActions({ onAction, userRole }: WelcomeQuickActionsP
         return (
           <button
             key={action.id}
-            onClick={() => onAction(t(action.promptKey))}
+            onClick={() => handleClick(action)}
             className="flex flex-col items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-gray-300 hover:bg-gray-50"
           >
             <div
