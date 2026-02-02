@@ -4,9 +4,92 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import PDFParser from "pdf2json";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { cleanMongolianText } from "@/lib/utils/clean-mongolian-text";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+// Types for TOC structure
+interface Topic {
+  id: string;
+  order: number;
+  title: string;
+  page: number;
+}
+
+interface Chapter {
+  id: string;
+  order: number;
+  title: string;
+  description: string;
+  topics: Topic[];
+}
+
+// LLM prompt for TOC extraction
+const TOC_EXTRACTION_PROMPT = `You are extracting a Table of Contents from a Mongolian textbook.
+Analyze the text and extract chapters and their topics with page numbers.
+
+Return ONLY valid JSON in this exact format:
+{
+  "chapters": [
+    {
+      "order": 0,
+      "title": "Бүлэг 1",
+      "description": "CHAPTER DESCRIPTION IN CAPS",
+      "topics": [
+        { "order": 0, "title": "Topic name", "page": 5 },
+        { "order": 1, "title": "Another topic", "page": 12 }
+      ]
+    }
+  ]
+}
+
+Rules:
+- Extract ALL chapters and topics found in the text
+- Page numbers must be integers
+- Order starts from 0
+- Keep original Mongolian text for titles
+- If no clear TOC structure found, return {"chapters": []}`;
+
+// Extract TOC using Gemini
+async function extractTocWithLLM(tocText: string): Promise<Chapter[]> {
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: tocText }] }],
+    systemInstruction: {
+      role: "user",
+      parts: [{ text: TOC_EXTRACTION_PROMPT }],
+    },
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  console.log("=== RESULT ===");
+  console.log(result.response.text());
+  console.log("=== END RESULT ===");
+
+  const content = result.response.text() || '{"chapters":[]}';
+  const parsed = JSON.parse(content);
+
+  // Add UUIDs to chapters and topics
+  return (parsed.chapters || []).map(
+    (ch: Omit<Chapter, "id" | "topics"> & { topics: Omit<Topic, "id">[] }) => ({
+      id: crypto.randomUUID(),
+      order: ch.order,
+      title: ch.title,
+      description: ch.description,
+      topics: (ch.topics || []).map((t: Omit<Topic, "id">) => ({
+        id: crypto.randomUUID(),
+        order: t.order,
+        title: t.title,
+        page: t.page,
+      })),
+    })
+  );
+}
 
 async function extractTextFromPdf(
   pdfBuffer: Buffer,
@@ -116,94 +199,22 @@ export async function POST(request: NextRequest) {
     const response = await fetch(textbook.pdfUrl);
     const pdfBuffer = Buffer.from(await response.arrayBuffer());
 
-    // 4. Extract and log TOC pages (first 6 pages)
+    // 4. Extract TOC pages (first 6 pages) and extract with LLM
     const { text: tocText } = await extractTextFromPdf(pdfBuffer, 6);
     const cleanedTocText = cleanMongolianText(tocText);
     console.log("=== CLEANED TOC TEXT (First 6 pages) ===");
     console.log(cleanedTocText);
     console.log("=== END CLEANED TOC TEXT ===");
 
-    // 5. Extract full text using pdf2json
+    // 5. Extract TOC using LLM
+    const tableOfContents = await extractTocWithLLM(cleanedTocText);
+    console.log("=== EXTRACTED TOC ===");
+    console.log(JSON.stringify(tableOfContents, null, 2));
+    console.log("=== END EXTRACTED TOC ===");
+
+    // 6. Extract full text using pdf2json
     const { text, pageCount } = await extractTextFromPdf(pdfBuffer);
     const cleanedText = cleanMongolianText(text);
-
-    // 5. Dummy table of contents (extraction will be implemented later)
-    const tableOfContents = [
-      {
-        id: crypto.randomUUID(),
-        order: 0,
-        title: "Бүлэг 1",
-        description: "БҮХЭЛ ТООН ОЛОНЛОГ",
-        topics: [
-          {
-            id: crypto.randomUUID(),
-            order: 0,
-            title: "Бүхэл тоон олонлогийн ойлголт",
-            page: 5,
-          },
-          {
-            id: crypto.randomUUID(),
-            order: 1,
-            title: "Натурал тооны олонлог",
-            page: 12,
-          },
-          {
-            id: crypto.randomUUID(),
-            order: 2,
-            title: "Бүхэл тоон дээрх үйлдлүүд",
-            page: 20,
-          },
-        ],
-      },
-      {
-        id: crypto.randomUUID(),
-        order: 1,
-        title: "Бүлэг 2",
-        description: "РАЦИОНАЛ ТООН ОЛОНЛОГ",
-        topics: [
-          {
-            id: crypto.randomUUID(),
-            order: 0,
-            title: "Рационал тооны тодорхойлолт",
-            page: 35,
-          },
-          {
-            id: crypto.randomUUID(),
-            order: 1,
-            title: "Энгийн бутархай",
-            page: 42,
-          },
-          {
-            id: crypto.randomUUID(),
-            order: 2,
-            title: "Аравтын бутархай",
-            page: 50,
-          },
-          {
-            id: crypto.randomUUID(),
-            order: 3,
-            title: "Рационал тоон дээрх үйлдлүүд",
-            page: 58,
-          },
-        ],
-      },
-      {
-        id: crypto.randomUUID(),
-        order: 2,
-        title: "Бүлэг 3",
-        description: "МЕХАНИК",
-        topics: [
-          { id: crypto.randomUUID(), order: 0, title: "Кинематик", page: 70 },
-          { id: crypto.randomUUID(), order: 1, title: "Динамик", page: 85 },
-          {
-            id: crypto.randomUUID(),
-            order: 2,
-            title: "Хүч ба хөдөлгөөн",
-            page: 98,
-          },
-        ],
-      },
-    ];
 
     // 6. Save extracted text and TOC
     await convex.mutation(api.textbooks.updateExtractedText, {
