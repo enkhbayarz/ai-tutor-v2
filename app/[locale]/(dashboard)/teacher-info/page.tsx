@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -21,6 +21,7 @@ import {
 } from "@/components/shared";
 import { teacherFormSchema, VALIDATION_LIMITS } from "@/lib/validations/teacher";
 import { exportToExcel } from "@/lib/export-excel";
+import { BulkImportDialog, TeacherCredentialsDialog } from "@/components/teacher";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -46,6 +47,7 @@ interface TableTeacher {
 export default function TeacherInfoPage() {
   const t = useTranslations("teachers");
   const tForm = useTranslations("teacherForm");
+  const tBulkImport = useTranslations("bulkImport");
   const [search, setSearch] = useState("");
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -61,6 +63,18 @@ export default function TeacherInfoPage() {
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<ConvexTeacher | null>(null);
+
+  // Bulk import dialog state
+  const [bulkImportDialogOpen, setBulkImportDialogOpen] = useState(false);
+
+  // Credentials dialog state (shown after successful teacher creation)
+  const [credentialsDialogOpen, setCredentialsDialogOpen] = useState(false);
+  const [generatedCredentials, setGeneratedCredentials] = useState<{
+    firstName: string;
+    lastName: string;
+    username: string;
+    password: string;
+  } | null>(null);
 
   // Convex queries/mutations
   const convexTeachers = useQuery(api.teachers.list);
@@ -151,14 +165,33 @@ export default function TeacherInfoPage() {
   };
 
   const handleAddSubmit = async (data: PersonFormData) => {
-    await createTeacher({
-      lastName: data.lastName.trim(),
-      firstName: data.firstName.trim(),
-      grade: parseInt(data.grade),
-      group: data.group,
-      phone1: data.phone1.trim(),
-      phone2: data.phone2?.trim() || undefined,
+    const response = await fetch("/api/teachers/create-with-clerk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lastName: data.lastName.trim(),
+        firstName: data.firstName.trim(),
+        grade: parseInt(data.grade),
+        group: data.group,
+        phone1: data.phone1.trim(),
+        phone2: data.phone2?.trim() || undefined,
+      }),
     });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || "Failed to create teacher");
+    }
+
+    // Show credentials dialog with the generated username/password
+    setGeneratedCredentials({
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+      username: result.username,
+      password: result.tempPassword,
+    });
+    setCredentialsDialogOpen(true);
   };
 
   const handleEditSubmit = async (data: PersonFormData) => {
@@ -264,6 +297,15 @@ export default function TeacherInfoPage() {
           >
             <Download className="w-4 h-4 mr-2" />
             {t("exportExcel")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full px-4"
+            onClick={() => setBulkImportDialogOpen(true)}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {t("bulkImport")}
           </Button>
           <Button
             size="sm"
@@ -381,6 +423,59 @@ export default function TeacherInfoPage() {
           delete: tForm("delete"),
           deleting: tForm("deleting"),
         }}
+      />
+
+      {/* Bulk Import Dialog */}
+      <BulkImportDialog
+        open={bulkImportDialogOpen}
+        onOpenChange={setBulkImportDialogOpen}
+        labels={{
+          title: tBulkImport("title"),
+          uploadStep: tBulkImport("uploadStep"),
+          previewStep: tBulkImport("previewStep"),
+          processStep: tBulkImport("processStep"),
+          resultsStep: tBulkImport("resultsStep"),
+          dragDrop: tBulkImport("dragDrop"),
+          orClick: tBulkImport("orClick"),
+          supportedFormats: tBulkImport("supportedFormats"),
+          downloadTemplate: tBulkImport("downloadTemplate"),
+          rowCount: (count: number) => tBulkImport("rowCount", { count }),
+          validRows: (count: number) => tBulkImport("validRows", { count }),
+          invalidRows: (count: number) => tBulkImport("invalidRows", { count }),
+          fixErrors: tBulkImport("fixErrors"),
+          process: tBulkImport("process"),
+          processing: tBulkImport("processing"),
+          back: tBulkImport("back"),
+          close: tBulkImport("close"),
+          rowNumber: tBulkImport("rowNumber"),
+          lastName: tBulkImport("lastName"),
+          firstName: tBulkImport("firstName"),
+          grade: tBulkImport("grade"),
+          group: tBulkImport("group"),
+          phone1: tBulkImport("phone1"),
+          phone2: tBulkImport("phone2"),
+          status: tBulkImport("status"),
+          valid: tBulkImport("valid"),
+          invalid: tBulkImport("invalid"),
+          summary: tBulkImport("summary"),
+          total: tBulkImport("total"),
+          success: tBulkImport("success"),
+          failed: tBulkImport("failed"),
+          name: tBulkImport("name"),
+          username: tBulkImport("username"),
+          tempPassword: tBulkImport("tempPassword"),
+          error: tBulkImport("error"),
+          downloadResults: tBulkImport("downloadResults"),
+          successStatus: tBulkImport("successStatus"),
+          failedStatus: tBulkImport("failedStatus"),
+        }}
+      />
+
+      {/* Teacher Credentials Dialog (shown after successful creation) */}
+      <TeacherCredentialsDialog
+        open={credentialsDialogOpen}
+        onOpenChange={setCredentialsDialogOpen}
+        credentials={generatedCredentials}
       />
     </div>
   );

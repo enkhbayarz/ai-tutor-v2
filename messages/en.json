@@ -52,6 +52,7 @@
   "teachers": {
     "title": "Teacher Registration",
     "addTeacher": "Add New Teacher",
+    "bulkImport": "Bulk Import",
     "exportExcel": "Export Excel",
     "filter": "Filter",
     "search": "Search",
@@ -148,6 +149,22 @@
     "close": "Close",
     "downloadContent": {
       "studentInfo": "Student Login Credentials",
+      "name": "Name",
+      "username": "Username",
+      "password": "Password",
+      "note": "Note: Please change your password on first login."
+    }
+  },
+  "teacherCredentials": {
+    "title": "Teacher Login Credentials",
+    "description": "Login credentials for {name} have been created successfully",
+    "username": "Username",
+    "password": "Password",
+    "warning": "Please share these credentials with the teacher and remind them to change their password.",
+    "download": "Download",
+    "close": "Close",
+    "downloadContent": {
+      "teacherInfo": "Teacher Login Credentials",
       "name": "Name",
       "username": "Username",
       "password": "Password",

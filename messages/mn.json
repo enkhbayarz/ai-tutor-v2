@@ -52,6 +52,7 @@
   "teachers": {
     "title": "Багшийн бүртгэл",
     "addTeacher": "Шинэ багш нэмэх",
+    "bulkImport": "Бөөнөөр нэмэх",
     "exportExcel": "Excel татах",
     "filter": "Шүүлтүүр",
     "search": "Хайх",
@@ -148,6 +149,22 @@
     "close": "Хаах",
     "downloadContent": {
       "studentInfo": "Сурагчийн нэвтрэх мэдээлэл",
+      "name": "Нэр",
+      "username": "Нэвтрэх нэр",
+      "password": "Нууц үг",
+      "note": "Анхааруулга: Анх нэвтрэхдээ нууц үгээ солино уу."
+    }
+  },
+  "teacherCredentials": {
+    "title": "Багшийн нэвтрэх мэдээлэл",
+    "description": "{name} багшийн нэвтрэх мэдээлэл амжилттай үүсгэгдлээ",
+    "username": "Нэвтрэх нэр",
+    "password": "Нууц үг",
+    "warning": "Энэ мэдээллийг багшид хүргүүлж, нууц үгээ солихыг сануулна уу.",
+    "download": "Татах",
+    "close": "Хаах",
+    "downloadContent": {
+      "teacherInfo": "Багшийн нэвтрэх мэдээлэл",
       "name": "Нэр",
       "username": "Нэвтрэх нэр",
       "password": "Нууц үг",

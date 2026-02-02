@@ -27,11 +27,15 @@ export default defineSchema({
     // Optional for backward compatibility with existing data
     // Run migrations.addStatusToTeachers to populate existing records
     status: v.optional(v.union(v.literal("active"), v.literal("deleted"))),
+    // Clerk user link for bulk-imported teachers
+    clerkId: v.optional(v.string()),
+    username: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
     .index("by_grade", ["grade"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_clerk_id", ["clerkId"]),
 
   students: defineTable({
     lastName: v.string(),
