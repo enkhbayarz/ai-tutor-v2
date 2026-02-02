@@ -4,9 +4,10 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import {
@@ -79,7 +80,7 @@ function groupConversationsByDate(
 
 export function ChatSidebar() {
   const { user } = useUser();
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isAuthenticated } = useConvexAuth();
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -91,10 +92,10 @@ export function ChatSidebar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
-  // Convex queries and mutations - skip until auth is ready
+  // Convex queries and mutations - skip until Convex auth is ready
   const conversations = useQuery(
     api.conversations.list,
-    isLoaded && isSignedIn ? {} : "skip"
+    isAuthenticated ? {} : "skip"
   );
   const removeConversation = useMutation(api.conversations.remove);
   const updateTitle = useMutation(api.conversations.updateTitle);
