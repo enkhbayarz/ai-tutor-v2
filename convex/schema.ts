@@ -11,11 +11,13 @@ export default defineSchema({
     role: v.optional(
       v.union(v.literal("admin"), v.literal("teacher"), v.literal("student"))
     ),
+    externalUserId: v.optional(v.string()), // UUID for external AI backend
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
     .index("by_clerk_id", ["clerkId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_external_user_id", ["externalUserId"]),
 
   teachers: defineTable({
     lastName: v.string(),

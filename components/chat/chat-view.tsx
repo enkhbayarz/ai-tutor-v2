@@ -93,6 +93,21 @@ export function ChatView({ conversationId }: ChatViewProps) {
     }
   }, [conversation?.sessionId]);
 
+  // Helper to convert File to base64
+  const fileToBase64 = useCallback((file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Extract base64 data without the data URL prefix
+        const base64 = result.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
   const handleSend = useCallback(
     async (content: string) => {
       if (!user?.id || isStreaming) return;
@@ -103,7 +118,11 @@ export function ChatView({ conversationId }: ChatViewProps) {
       // Upload image to Convex if present
       let imageStorageId: Id<"_storage"> | undefined;
       let resolvedImageUrl: string | undefined;
+      let imageBase64: string | undefined;
       if (currentImage) {
+        // Convert to base64 for vision API
+        imageBase64 = await fileToBase64(currentImage);
+
         const uploadUrl = await generateUploadUrl();
         const uploadResult = await fetch(uploadUrl, {
           method: "POST",
@@ -155,7 +174,12 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
       // Stream AI response using chat-v2 API (backend manages conversation history)
       try {
-        const assistantContent = await sendMessage(content, currentSessionId ?? undefined);
+        const assistantContent = await sendMessage(
+          content,
+          currentSessionId ?? undefined,
+          undefined, // classId
+          imageBase64,
+        );
 
         if (assistantContent) {
           // Add assistant message to local state
@@ -203,6 +227,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
       touchConversation,
       saveMessage,
       recordInteraction,
+      fileToBase64,
     ]
   );
 

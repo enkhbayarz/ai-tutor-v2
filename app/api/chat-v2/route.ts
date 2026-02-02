@@ -1,31 +1,44 @@
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { SignJWT } from "jose";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
 
 const AI_BACKEND_URL = process.env.AI_BACKEND_URL;
 const AI_BACKEND_SECRET =
   process.env.AI_BACKEND_SECRET || "my-super-secret-key-12345";
 
-// Default values for testing - in production these would come from user context
+// Default values for testing - school_id and class_id are still hardcoded
 const DEFAULT_USER_ID = "2e7fe617-25b8-4ca3-ab86-1a348eb658e4";
 const DEFAULT_SCHOOL_ID = "5036e963-d286-449c-8c08-f69fd7549a07";
 const DEFAULT_CLASS_ID = "2728a8a1-eab6-4502-afd1-79ca351e6199";
+
+// Initialize Convex client
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 interface ChatV2Request {
   message: string;
   classId?: string;
   sessionId?: string;
+  imageBase64?: string;
+  includeVision?: boolean;
 }
 
-async function generateBackendToken(role: string = "student"): Promise<string> {
+interface TokenParams {
+  userId: string;
+  role: string;
+  name: string;
+}
+
+async function generateBackendToken(params: TokenParams): Promise<string> {
   const secret = new TextEncoder().encode(AI_BACKEND_SECRET);
 
   const token = await new SignJWT({
-    user_id: DEFAULT_USER_ID,
+    user_id: params.userId,
     school_id: DEFAULT_SCHOOL_ID,
     class_ids: [DEFAULT_CLASS_ID],
-    role: role,
-    name: "Test Student",
+    role: params.role,
+    name: params.name,
     iss: "main-backend",
   })
     .setProtectedHeader({ alg: "HS256" })
@@ -38,8 +51,8 @@ async function generateBackendToken(role: string = "student"): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     // Auth check
-    const { userId } = await auth();
-    if (!userId) {
+    const { userId: clerkUserId } = await auth();
+    if (!clerkUserId) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -47,14 +60,28 @@ export async function POST(request: NextRequest) {
 
     console.log(`body: ${JSON.stringify(body)}`);
 
-    const { message, classId, sessionId } = body;
+    const { message, sessionId, imageBase64, includeVision } = body;
 
     if (!message) {
       return new Response("Missing message", { status: 400 });
     }
 
-    // Generate JWT for backend
-    const backendToken = await generateBackendToken();
+    // Get user from Convex with externalUserId (generates if missing)
+    const convexUser = await convex.mutation(api.users.ensureExternalUserId, {
+      clerkId: clerkUserId,
+    });
+
+    // Use dynamic values from Convex user, fallback to defaults
+    const externalUserId = convexUser?.externalUserId || DEFAULT_USER_ID;
+    const role = convexUser?.role || "student";
+    const displayName = convexUser?.displayName || "User";
+
+    // Generate JWT for backend with dynamic user context
+    const backendToken = await generateBackendToken({
+      userId: externalUserId,
+      role: role,
+      name: displayName,
+    });
 
     // Call external AI backend
     const response = await fetch(
@@ -69,6 +96,8 @@ export async function POST(request: NextRequest) {
           message: message,
           class_id: DEFAULT_CLASS_ID,
           session_id: sessionId,
+          image_base64: imageBase64 || null,
+          include_vision: includeVision || false,
         }),
       },
     );

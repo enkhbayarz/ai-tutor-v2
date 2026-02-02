@@ -12,6 +12,7 @@ export function useChatStream() {
       message: string,
       sessionId?: string,
       classId?: string,
+      imageBase64?: string,
     ): Promise<string> => {
       setIsStreaming(true);
       setStreamingContent("");
@@ -29,6 +30,8 @@ export function useChatStream() {
             message,
             sessionId,
             classId,
+            imageBase64: imageBase64 || null,
+            includeVision: !!imageBase64,
           }),
           signal: abortController.signal,
         });

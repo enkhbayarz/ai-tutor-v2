@@ -54,6 +54,10 @@ export const store = mutation({
       if (clerkUsername && user.username !== clerkUsername) {
         updates.username = clerkUsername;
       }
+      // Generate externalUserId if missing (for existing users)
+      if (!user.externalUserId) {
+        updates.externalUserId = crypto.randomUUID();
+      }
       if (Object.keys(updates).length > 0) {
         updates.updatedAt = Date.now();
         await ctx.db.patch(user._id, updates);
@@ -68,6 +72,7 @@ export const store = mutation({
       displayName: identity.name || clerkUsername || "User",
       username: clerkUsername,
       imageUrl: identity.pictureUrl,
+      externalUserId: crypto.randomUUID(),
       createdAt: Date.now(),
     });
   },
@@ -154,12 +159,17 @@ export const createFromAdmin = mutation({
       .first();
 
     if (existing) {
-      // Update role if not set
+      // Update role and externalUserId if not set
+      const updates: Record<string, unknown> = {};
       if (!existing.role) {
-        await ctx.db.patch(existing._id, {
-          role: args.role,
-          updatedAt: Date.now(),
-        });
+        updates.role = args.role;
+      }
+      if (!existing.externalUserId) {
+        updates.externalUserId = crypto.randomUUID();
+      }
+      if (Object.keys(updates).length > 0) {
+        updates.updatedAt = Date.now();
+        await ctx.db.patch(existing._id, updates);
       }
       return existing._id;
     }
@@ -170,6 +180,7 @@ export const createFromAdmin = mutation({
       displayName: args.displayName,
       username: args.username,
       role: args.role,
+      externalUserId: crypto.randomUUID(),
       createdAt: Date.now(),
     });
   },
@@ -196,6 +207,8 @@ export const upsertFromClerk = internalMutation({
         displayName: args.displayName,
         ...(args.username && { username: args.username }),
         imageUrl: args.imageUrl,
+        // Generate externalUserId if missing (for existing users)
+        ...(!user.externalUserId && { externalUserId: crypto.randomUUID() }),
         updatedAt: Date.now(),
       });
     } else {
@@ -205,8 +218,37 @@ export const upsertFromClerk = internalMutation({
         displayName: args.displayName,
         username: args.username,
         imageUrl: args.imageUrl,
+        externalUserId: crypto.randomUUID(),
         createdAt: Date.now(),
       });
     }
+  },
+});
+
+// Ensure user has externalUserId (generate if missing) and return user data
+// Used by chat-v2 API route for dynamic user context
+export const ensureExternalUserId = mutation({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    // Generate externalUserId if missing
+    if (!user.externalUserId) {
+      const externalUserId = crypto.randomUUID();
+      await ctx.db.patch(user._id, {
+        externalUserId,
+        updatedAt: Date.now(),
+      });
+      return { ...user, externalUserId };
+    }
+
+    return user;
   },
 });
