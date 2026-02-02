@@ -4,9 +4,10 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import PDFParser from "pdf2json";
-import { PDFDocument } from "pdf-lib";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { cleanMongolianText } from "@/lib/utils/clean-mongolian-text";
+
+// Note: pdf-lib is now used client-side only for extracting first 6 pages before upload
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -90,24 +91,6 @@ async function extractTocWithLLM(tocText: string): Promise<Chapter[]> {
       })),
     })
   );
-}
-
-// Extract first N pages from PDF to reduce memory usage
-async function extractFirstNPages(
-  pdfBuffer: Buffer,
-  n: number
-): Promise<Buffer> {
-  const pdfDoc = await PDFDocument.load(pdfBuffer);
-  const newPdf = await PDFDocument.create();
-  const pageCount = Math.min(n, pdfDoc.getPageCount());
-
-  const pages = await newPdf.copyPages(
-    pdfDoc,
-    Array.from({ length: pageCount }, (_, i) => i)
-  );
-  pages.forEach((page) => newPdf.addPage(page));
-
-  return Buffer.from(await newPdf.save());
 }
 
 // Extract TOC using Gemini Vision (for scanned/image-based PDFs)
@@ -272,28 +255,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Fetch PDF content
+    // 3. Fetch PDF content (already preprocessed to first 6 pages by client)
     const response = await fetch(textbook.pdfUrl);
     const pdfBuffer = Buffer.from(await response.arrayBuffer());
-    console.log(`=== PDF size: ${(pdfBuffer.length / 1024 / 1024).toFixed(2)} MB ===`);
+    console.log(`=== PDF size: ${(pdfBuffer.length / 1024 / 1024).toFixed(2)} MB (should be small, pre-extracted by client) ===`);
 
-    // 4. Extract first 6 pages only (saves memory for large PDFs)
-    console.log("=== Extracting first 6 pages ===");
-    const first6PagesPdf = await extractFirstNPages(pdfBuffer, 6);
-    console.log(`=== First 6 pages PDF size: ${(first6PagesPdf.length / 1024 / 1024).toFixed(2)} MB ===`);
-
-    // 5. Try text extraction first
-    const { text: tocText } = await extractTextFromPdf(first6PagesPdf);
+    // 4. Try text extraction first
+    const { text: tocText, pageCount } = await extractTextFromPdf(pdfBuffer);
     const cleanedTocText = cleanMongolianText(tocText);
     console.log("=== CLEANED TOC TEXT ===");
     console.log(cleanedTocText);
     console.log(`=== Text length: ${cleanedTocText.trim().length} chars ===`);
-    
-    // 6. Extract TOC - use vision fallback if text extraction failed
+
+    // 5. Extract TOC - use vision fallback if text extraction failed
     let tableOfContents: Chapter[];
     if (cleanedTocText.trim().length < 100) {
       console.log("=== Text extraction failed, using Gemini Vision ===");
-      tableOfContents = await extractTocWithVision(first6PagesPdf);
+      tableOfContents = await extractTocWithVision(pdfBuffer);
     } else {
       console.log("=== Using text-based LLM extraction ===");
       tableOfContents = await extractTocWithLLM(cleanedTocText);
@@ -302,9 +280,8 @@ export async function POST(request: NextRequest) {
     console.log(JSON.stringify(tableOfContents, null, 2));
     console.log("=== END EXTRACTED TOC ===");
 
-    // 7. Extract full text (use first 6 pages for now to avoid memory issues)
-    const { text, pageCount } = await extractTextFromPdf(first6PagesPdf);
-    const cleanedText = cleanMongolianText(text);
+    // 6. Use cleaned text as extracted text
+    const cleanedText = cleanMongolianText(tocText);
 
     // 6. Save extracted text and TOC
     await convex.mutation(api.textbooks.updateExtractedText, {

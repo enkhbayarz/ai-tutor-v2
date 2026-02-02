@@ -307,6 +307,10 @@
       "imageInvalid": "Зөвхөн зураг файл оруулна уу",
       "fileTooLarge": "Файлын хэмжээ хэтэрсэн байна",
       "fixErrors": "Алдаануудыг засна уу"
+    },
+    "processing": {
+      "preparing": "PDF-ийг бэлтгэж байна...",
+      "uploading": "Байршуулж байна..."
     }
   },
   "helpDialog": {

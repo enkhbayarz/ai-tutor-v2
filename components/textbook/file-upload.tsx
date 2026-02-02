@@ -6,6 +6,10 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { BookOpen, Upload, X, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { extractFirstPages } from "@/lib/pdf/extract-pages";
+import { useTranslations } from "next-intl";
+
+type ProcessingStatus = "preparing" | "uploading" | null;
 
 interface FileUploadProps {
   accept: string;
@@ -43,9 +47,11 @@ export function FileUpload({
   variant = "pdf",
   value,
 }: FileUploadProps) {
+  const t = useTranslations("textbookForm");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>(null);
   const [fileName, setFileName] = useState<string | null>(existingName || null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingUrl || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -79,6 +85,26 @@ export function FileUpload({
       setUploadProgress(0);
 
       try {
+        let fileToUpload = file;
+        let originalFileName = file.name;
+
+        // For PDFs, extract first 6 pages client-side to reduce file size
+        if (variant === "pdf") {
+          setProcessingStatus("preparing");
+          try {
+            const { file: extractedPdf } = await extractFirstPages(file, 6);
+            fileToUpload = extractedPdf;
+            // Keep original name for display
+            originalFileName = file.name;
+          } catch (extractError) {
+            console.error("PDF extraction error:", extractError);
+            // Fall back to original file if extraction fails
+            fileToUpload = file;
+          }
+        }
+
+        setProcessingStatus("uploading");
+
         // Get upload URL from Convex
         const uploadUrl = await generateUploadUrl();
 
@@ -104,7 +130,7 @@ export function FileUpload({
           xhr.addEventListener("error", () => reject(new Error("Upload failed")));
 
           xhr.open("POST", uploadUrl);
-          xhr.send(file);
+          xhr.send(fileToUpload);
         });
 
         // Parse response to get storage ID
@@ -125,14 +151,15 @@ export function FileUpload({
           });
         }
 
-        setFileName(file.name);
-        onUpload(storageId, file.name, imagePreviewUrl);
+        setFileName(originalFileName);
+        onUpload(storageId, originalFileName, imagePreviewUrl);
       } catch (err) {
         console.error("Upload error:", err);
         setUploadError("error");
       } finally {
         setIsUploading(false);
         setUploadProgress(0);
+        setProcessingStatus(null);
       }
     },
     [generateUploadUrl, maxSize, mimeTypes, onUpload, variant]
@@ -211,7 +238,11 @@ export function FileUpload({
             {isUploading ? (
               <>
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-2" />
-                <p className="text-sm text-gray-600">{uploadProgress}%</p>
+                <p className="text-sm text-gray-600">
+                  {processingStatus === "preparing"
+                    ? t("processing.preparing")
+                    : `${t("processing.uploading")} ${uploadProgress}%`}
+                </p>
               </>
             ) : (
               <>

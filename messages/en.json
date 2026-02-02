@@ -307,6 +307,10 @@
       "imageInvalid": "Only image files are allowed",
       "fileTooLarge": "File size exceeds limit",
       "fixErrors": "Please fix the errors"
+    },
+    "processing": {
+      "preparing": "Preparing PDF...",
+      "uploading": "Uploading..."
     }
   },
   "helpDialog": {
