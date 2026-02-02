@@ -4,42 +4,60 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import PDFParser from "pdf2json";
+import { cleanMongolianText } from "@/lib/utils/clean-mongolian-text";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-async function extractTextFromPdf(pdfBuffer: Buffer): Promise<{ text: string; pageCount: number }> {
+async function extractTextFromPdf(
+  pdfBuffer: Buffer,
+  maxPages?: number
+): Promise<{ text: string; pageCount: number }> {
   return new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
 
-    pdfParser.on("pdfParser_dataError", (errData: Error | { parserError: Error }) => {
-      if (errData instanceof Error) {
-        reject(errData);
-      } else {
-        reject(errData.parserError);
-      }
-    });
-
-    pdfParser.on("pdfParser_dataReady", (pdfData: { Pages: Array<{ Texts: Array<{ R: Array<{ T: string }> }> }> }) => {
-      const pages = pdfData.Pages || [];
-      const textParts: string[] = [];
-
-      for (const page of pages) {
-        const pageTexts: string[] = [];
-        for (const textItem of page.Texts || []) {
-          for (const run of textItem.R || []) {
-            // Decode URI-encoded text
-            const text = decodeURIComponent(run.T || "");
-            pageTexts.push(text);
-          }
+    pdfParser.on(
+      "pdfParser_dataError",
+      (errData: Error | { parserError: Error }) => {
+        if (errData instanceof Error) {
+          reject(errData);
+        } else {
+          reject(errData.parserError);
         }
-        textParts.push(pageTexts.join(" "));
       }
+    );
 
-      resolve({
-        text: textParts.join("\n\n"),
-        pageCount: pages.length,
-      });
-    });
+    pdfParser.on(
+      "pdfParser_dataReady",
+      (pdfData: {
+        Pages: Array<{ Texts: Array<{ R: Array<{ T: string }> }> }>;
+      }) => {
+        const pages = pdfData.Pages || [];
+        const pagesToProcess = maxPages ? pages.slice(0, maxPages) : pages;
+        const textParts: string[] = [];
+
+        for (const page of pagesToProcess) {
+          const pageTexts: string[] = [];
+          for (const textItem of page.Texts || []) {
+            for (const run of textItem.R || []) {
+              // Safe decode - fallback to raw text if URI malformed
+              let text: string;
+              try {
+                text = decodeURIComponent(run.T || "");
+              } catch {
+                text = run.T || "";
+              }
+              pageTexts.push(text);
+            }
+          }
+          textParts.push(pageTexts.join(" "));
+        }
+
+        resolve({
+          text: textParts.join("\n\n"),
+          pageCount: pages.length,
+        });
+      }
+    );
 
     pdfParser.parseBuffer(pdfBuffer);
   });
@@ -50,7 +68,10 @@ export async function POST(request: NextRequest) {
     // Auth check
     const { userId, getToken } = await auth();
     if (!userId) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     // Set Convex auth token from Clerk
@@ -95,8 +116,16 @@ export async function POST(request: NextRequest) {
     const response = await fetch(textbook.pdfUrl);
     const pdfBuffer = Buffer.from(await response.arrayBuffer());
 
-    // 4. Extract text using pdf2json
+    // 4. Extract and log TOC pages (first 6 pages)
+    const { text: tocText } = await extractTextFromPdf(pdfBuffer, 6);
+    const cleanedTocText = cleanMongolianText(tocText);
+    console.log("=== CLEANED TOC TEXT (First 6 pages) ===");
+    console.log(cleanedTocText);
+    console.log("=== END CLEANED TOC TEXT ===");
+
+    // 5. Extract full text using pdf2json
     const { text, pageCount } = await extractTextFromPdf(pdfBuffer);
+    const cleanedText = cleanMongolianText(text);
 
     // 5. Dummy table of contents (extraction will be implemented later)
     const tableOfContents = [
@@ -106,9 +135,24 @@ export async function POST(request: NextRequest) {
         title: "Бүлэг 1",
         description: "БҮХЭЛ ТООН ОЛОНЛОГ",
         topics: [
-          { id: crypto.randomUUID(), order: 0, title: "Бүхэл тоон олонлогийн ойлголт", page: 5 },
-          { id: crypto.randomUUID(), order: 1, title: "Натурал тооны олонлог", page: 12 },
-          { id: crypto.randomUUID(), order: 2, title: "Бүхэл тоон дээрх үйлдлүүд", page: 20 },
+          {
+            id: crypto.randomUUID(),
+            order: 0,
+            title: "Бүхэл тоон олонлогийн ойлголт",
+            page: 5,
+          },
+          {
+            id: crypto.randomUUID(),
+            order: 1,
+            title: "Натурал тооны олонлог",
+            page: 12,
+          },
+          {
+            id: crypto.randomUUID(),
+            order: 2,
+            title: "Бүхэл тоон дээрх үйлдлүүд",
+            page: 20,
+          },
         ],
       },
       {
@@ -117,10 +161,30 @@ export async function POST(request: NextRequest) {
         title: "Бүлэг 2",
         description: "РАЦИОНАЛ ТООН ОЛОНЛОГ",
         topics: [
-          { id: crypto.randomUUID(), order: 0, title: "Рационал тооны тодорхойлолт", page: 35 },
-          { id: crypto.randomUUID(), order: 1, title: "Энгийн бутархай", page: 42 },
-          { id: crypto.randomUUID(), order: 2, title: "Аравтын бутархай", page: 50 },
-          { id: crypto.randomUUID(), order: 3, title: "Рационал тоон дээрх үйлдлүүд", page: 58 },
+          {
+            id: crypto.randomUUID(),
+            order: 0,
+            title: "Рационал тооны тодорхойлолт",
+            page: 35,
+          },
+          {
+            id: crypto.randomUUID(),
+            order: 1,
+            title: "Энгийн бутархай",
+            page: 42,
+          },
+          {
+            id: crypto.randomUUID(),
+            order: 2,
+            title: "Аравтын бутархай",
+            page: 50,
+          },
+          {
+            id: crypto.randomUUID(),
+            order: 3,
+            title: "Рационал тоон дээрх үйлдлүүд",
+            page: 58,
+          },
         ],
       },
       {
@@ -131,7 +195,12 @@ export async function POST(request: NextRequest) {
         topics: [
           { id: crypto.randomUUID(), order: 0, title: "Кинематик", page: 70 },
           { id: crypto.randomUUID(), order: 1, title: "Динамик", page: 85 },
-          { id: crypto.randomUUID(), order: 2, title: "Хүч ба хөдөлгөөн", page: 98 },
+          {
+            id: crypto.randomUUID(),
+            order: 2,
+            title: "Хүч ба хөдөлгөөн",
+            page: 98,
+          },
         ],
       },
     ];
@@ -139,7 +208,7 @@ export async function POST(request: NextRequest) {
     // 6. Save extracted text and TOC
     await convex.mutation(api.textbooks.updateExtractedText, {
       id: textbookId as Id<"textbooks">,
-      extractedText: text,
+      extractedText: cleanedText,
       tableOfContents: tableOfContents,
       status: "completed",
     });
@@ -151,12 +220,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      textLength: text.length,
+      textLength: cleanedText.length,
       pageCount,
       chaptersFound: tableOfContents.length,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     console.error("PDF extraction error:", error);
 
     // Try to update status to failed if we have a textbookId
