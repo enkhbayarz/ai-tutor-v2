@@ -4,9 +4,9 @@ import { createClerkClient } from "@clerk/backend";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import {
-  generateUsername,
-  generateTempPassword,
-} from "@/lib/bulk-import/generate-credentials";
+  generateStudentUsername,
+  generateStudentPassword,
+} from "@/lib/student-credentials/generate-credentials";
 import { type BulkImportRow } from "@/lib/validations/bulk-import";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -38,15 +38,10 @@ async function processRow(
   let clerkUserId: string | null = null;
 
   try {
-    // Create Clerk user with username and password
-    // Generate a placeholder email (required by Clerk instance settings)
-    // Students will login with username, not email
-    const placeholderEmail = `${username}@student.local`;
-
+    // Create Clerk user with username and password only (no email)
     const clerkUser = await clerkClient.users.createUser({
       username,
       password: tempPassword,
-      emailAddress: [placeholderEmail],
       skipPasswordChecks: true,
       publicMetadata: {
         requirePasswordChange: true,
@@ -154,10 +149,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Pre-generate credentials for all rows
+    // Pre-generate credentials for all rows using the new format
+    // Username: {firstName}{lastNameInitial} → "baatare"
+    // Password: {phone}{initials}{special} → "99123456BE$"
     const credentials = rows.map((row) => ({
-      username: generateUsername(row.firstName, row.lastName, usernameSet),
-      tempPassword: generateTempPassword(),
+      username: generateStudentUsername(row.firstName, row.lastName, usernameSet),
+      tempPassword: generateStudentPassword(row.phone1, row.firstName, row.lastName),
     }));
 
     // Process in batches to respect rate limits

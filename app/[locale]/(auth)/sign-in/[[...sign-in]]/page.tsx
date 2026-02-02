@@ -5,7 +5,7 @@ import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, Mail, Lock, KeyRound } from "lucide-react";
+import { Eye, EyeOff, User, Lock, KeyRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ export default function SignInPage() {
   const locale = useLocale();
   const t = useTranslations("auth");
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -36,7 +36,7 @@ export default function SignInPage() {
 
     try {
       const result = await signIn.create({
-        identifier: email,
+        identifier,
         password,
       });
 
@@ -181,17 +181,17 @@ export default function SignInPage() {
           </div>
         )}
 
-        {/* Email */}
+        {/* Email or Username */}
         <div className="space-y-2">
-          <Label htmlFor="email">{t("email")}</Label>
+          <Label htmlFor="identifier">{t("identifier")}</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              id="email"
-              type="email"
-              placeholder={t("emailPlaceholder")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="identifier"
+              type="text"
+              placeholder={t("identifierPlaceholder")}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="pl-10"
               required
             />

@@ -29,6 +29,8 @@
     "namePlaceholder": "Enter your name",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
+    "identifier": "Email or Username",
+    "identifierPlaceholder": "Enter email or username",
     "password": "Password",
     "passwordPlaceholder": "Enter your password",
     "forgotPassword": "Forgot password?",
@@ -134,6 +136,22 @@
       "phoneDigitsOnly": "Only digits are allowed",
       "phoneLength": "Phone number must be {length} digits",
       "fixErrors": "Please fix the errors"
+    }
+  },
+  "studentCredentials": {
+    "title": "Student Login Credentials",
+    "description": "Login credentials for {name} have been created successfully",
+    "username": "Username",
+    "password": "Password",
+    "warning": "Please share these credentials with the student and remind them to change their password.",
+    "download": "Download",
+    "close": "Close",
+    "downloadContent": {
+      "studentInfo": "Student Login Credentials",
+      "name": "Name",
+      "username": "Username",
+      "password": "Password",
+      "note": "Note: Please change your password on first login."
     }
   },
   "teacherForm": {

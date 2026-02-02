@@ -33,28 +33,40 @@ export const store = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    // Get username from Clerk identity (for username-only users like students)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clerkUsername = (identity as any).preferred_username || (identity as any).username;
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
 
     if (user) {
-      // Update existing user if name changed
-      if (user.displayName !== identity.name) {
-        await ctx.db.patch(user._id, {
-          displayName: identity.name || user.displayName,
-          imageUrl: identity.pictureUrl,
-          updatedAt: Date.now(),
-        });
+      // Update existing user if name or username changed
+      const updates: Record<string, unknown> = {};
+      if (user.displayName !== identity.name && identity.name) {
+        updates.displayName = identity.name;
+      }
+      if (identity.pictureUrl) {
+        updates.imageUrl = identity.pictureUrl;
+      }
+      if (clerkUsername && user.username !== clerkUsername) {
+        updates.username = clerkUsername;
+      }
+      if (Object.keys(updates).length > 0) {
+        updates.updatedAt = Date.now();
+        await ctx.db.patch(user._id, updates);
       }
       return user._id;
     }
 
-    // Create new user
+    // Create new user (email is optional for username-only users like students)
     return await ctx.db.insert("users", {
       clerkId: identity.subject,
-      email: identity.email!,
-      displayName: identity.name || "User",
+      email: identity.email || undefined,
+      displayName: identity.name || clerkUsername || "User",
+      username: clerkUsername,
       imageUrl: identity.pictureUrl,
       createdAt: Date.now(),
     });
@@ -130,8 +142,9 @@ export const setRole = mutation({
 export const upsertFromClerk = internalMutation({
   args: {
     clerkId: v.string(),
-    email: v.string(),
+    email: v.optional(v.string()),
     displayName: v.string(),
+    username: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -142,14 +155,19 @@ export const upsertFromClerk = internalMutation({
 
     if (user) {
       await ctx.db.patch(user._id, {
-        email: args.email,
+        ...(args.email && { email: args.email }),
         displayName: args.displayName,
+        ...(args.username && { username: args.username }),
         imageUrl: args.imageUrl,
         updatedAt: Date.now(),
       });
     } else {
       await ctx.db.insert("users", {
-        ...args,
+        clerkId: args.clerkId,
+        email: args.email,
+        displayName: args.displayName,
+        username: args.username,
+        imageUrl: args.imageUrl,
         createdAt: Date.now(),
       });
     }

@@ -29,6 +29,8 @@
     "namePlaceholder": "Нэрээ оруулаарай",
     "email": "Имэйл",
     "emailPlaceholder": "Имэйл оруулаарай",
+    "identifier": "Имэйл эсвэл нэвтрэх нэр",
+    "identifierPlaceholder": "Имэйл эсвэл нэвтрэх нэрээ оруулаарай",
     "password": "Нууц үг",
     "passwordPlaceholder": "Нууц үгээ оруулаарай",
     "forgotPassword": "Нууц үгээ мартсан уу?",
@@ -134,6 +136,22 @@
       "phoneDigitsOnly": "Зөвхөн тоо оруулна уу",
       "phoneLength": "Утасны дугаар {length} оронтой байх ёстой",
       "fixErrors": "Алдаануудыг засна уу"
+    }
+  },
+  "studentCredentials": {
+    "title": "Сурагчийн нэвтрэх мэдээлэл",
+    "description": "{name} сурагчийн нэвтрэх мэдээлэл амжилттай үүсгэгдлээ",
+    "username": "Нэвтрэх нэр",
+    "password": "Нууц үг",
+    "warning": "Энэ мэдээллийг сурагчид хүргүүлж, нууц үгээ солихыг сануулна уу.",
+    "download": "Татах",
+    "close": "Хаах",
+    "downloadContent": {
+      "studentInfo": "Сурагчийн нэвтрэх мэдээлэл",
+      "name": "Нэр",
+      "username": "Нэвтрэх нэр",
+      "password": "Нууц үг",
+      "note": "Анхааруулга: Анх нэвтрэхдээ нууц үгээ солино уу."
     }
   },
   "teacherForm": {

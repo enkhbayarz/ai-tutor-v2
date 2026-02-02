@@ -13,7 +13,14 @@
       "Bash(ls:*)",
       "Bash(bun run build:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:www.npmjs.com)"
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:trigger.dev)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:compute.hivenet.com)",
+      "WebFetch(domain:upstash.com)",
+      "WebFetch(domain:news.convex.dev)",
+      "WebFetch(domain:stack.convex.dev)",
+      "Bash(bun add:*)"
     ]
   }
 }

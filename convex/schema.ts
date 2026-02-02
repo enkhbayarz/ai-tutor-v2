@@ -4,10 +4,10 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     clerkId: v.string(), // Clerk user ID
-    email: v.string(), // From Clerk
+    email: v.optional(v.string()), // From Clerk (optional for username-only users)
     imageUrl: v.optional(v.string()), // Profile image URL
     displayName: v.string(), // Editable display name
-    username: v.optional(v.string()), // Editable username
+    username: v.optional(v.string()), // Editable username (from Clerk for students/teachers)
     role: v.optional(
       v.union(v.literal("admin"), v.literal("teacher"), v.literal("student"))
     ),

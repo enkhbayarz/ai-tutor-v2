@@ -21,7 +21,7 @@ import {
 } from "@/components/shared";
 import { studentFormSchema, VALIDATION_LIMITS } from "@/lib/validations/student";
 import { exportToExcel } from "@/lib/export-excel";
-import { BulkImportDialog } from "@/components/student";
+import { BulkImportDialog, StudentCredentialsDialog } from "@/components/student";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -66,6 +66,15 @@ export default function StudentInfoPage() {
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<ConvexStudent | null>(null);
+
+  // Credentials dialog state (shown after successful student creation)
+  const [credentialsDialogOpen, setCredentialsDialogOpen] = useState(false);
+  const [generatedCredentials, setGeneratedCredentials] = useState<{
+    firstName: string;
+    lastName: string;
+    username: string;
+    password: string;
+  } | null>(null);
 
   // Convex queries/mutations
   const convexStudents = useQuery(api.students.list);
@@ -156,14 +165,33 @@ export default function StudentInfoPage() {
   };
 
   const handleAddSubmit = async (data: PersonFormData) => {
-    await createStudent({
-      lastName: data.lastName.trim(),
-      firstName: data.firstName.trim(),
-      grade: parseInt(data.grade),
-      group: data.group,
-      phone1: data.phone1.trim(),
-      phone2: data.phone2?.trim() || undefined,
+    const response = await fetch("/api/students/create-with-clerk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lastName: data.lastName.trim(),
+        firstName: data.firstName.trim(),
+        grade: parseInt(data.grade),
+        group: data.group,
+        phone1: data.phone1.trim(),
+        phone2: data.phone2?.trim() || undefined,
+      }),
     });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || "Failed to create student");
+    }
+
+    // Show credentials dialog with the generated username/password
+    setGeneratedCredentials({
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+      username: result.username,
+      password: result.tempPassword,
+    });
+    setCredentialsDialogOpen(true);
   };
 
   const handleEditSubmit = async (data: PersonFormData) => {
@@ -441,6 +469,13 @@ export default function StudentInfoPage() {
           successStatus: tBulkImport("successStatus"),
           failedStatus: tBulkImport("failedStatus"),
         }}
+      />
+
+      {/* Student Credentials Dialog (shown after successful creation) */}
+      <StudentCredentialsDialog
+        open={credentialsDialogOpen}
+        onOpenChange={setCredentialsDialogOpen}
+        credentials={generatedCredentials}
       />
     </div>
   );
