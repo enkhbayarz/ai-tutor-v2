@@ -37,7 +37,7 @@ async function generateBackendToken(params: TokenParams): Promise<string> {
     user_id: params.userId,
     school_id: DEFAULT_SCHOOL_ID,
     class_ids: [DEFAULT_CLASS_ID],
-    role: params.role,
+    role: params.role === "admin" ? "teacher" : params.role,
     name: params.name,
     iss: "main-backend",
   })
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
           image_base64: imageBase64 || null,
           include_vision: includeVision || false,
         }),
-      },
+      }
     );
 
     if (!response.ok) {
