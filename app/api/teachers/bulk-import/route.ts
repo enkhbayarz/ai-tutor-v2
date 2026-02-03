@@ -8,8 +8,8 @@ import {
   generateStudentPassword,
 } from "@/lib/student-credentials/generate-credentials";
 import { type TeacherBulkImportRow } from "@/lib/validations/teacher-bulk-import";
+import { Id } from "@/convex/_generated/dataModel";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
 });
@@ -34,8 +34,10 @@ async function processRow(
   rowIndex: number,
   username: string,
   tempPassword: string,
+  convex: ConvexHttpClient,
 ): Promise<ImportResult> {
   let clerkUserId: string | null = null;
+  let teacherId: Id<"teachers"> | null = null;
 
   try {
     // Create Clerk user with username and password only (no email)
@@ -52,7 +54,7 @@ async function processRow(
     clerkUserId = clerkUser.id;
 
     // Create Convex teacher record linked to Clerk user
-    const teacherId = await convex.mutation(api.teachers.createWithClerk, {
+    teacherId = await convex.mutation(api.teachers.createWithClerk, {
       lastName: row.lastName,
       firstName: row.firstName,
       phone1: row.phone1,
@@ -80,7 +82,16 @@ async function processRow(
       teacherId: teacherId,
     };
   } catch (error) {
-    // Rollback: If Clerk user was created but Convex failed, delete the Clerk user
+    // Rollback: Soft delete teacher record if it was created
+    if (teacherId) {
+      try {
+        await convex.mutation(api.teachers.softDelete, { id: teacherId });
+      } catch (rollbackError) {
+        console.error("Rollback failed - orphaned teacher record:", teacherId);
+      }
+    }
+
+    // Rollback: Delete Clerk user if it was created
     if (clerkUserId) {
       try {
         await clerkClient.users.deleteUser(clerkUserId);
@@ -118,6 +129,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create Convex client per-request to avoid race conditions
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (!convexUrl) {
+      throw new Error("NEXT_PUBLIC_CONVEX_URL environment variable is required");
+    }
+    const convex = new ConvexHttpClient(convexUrl);
+
     // Set Convex auth token from Clerk
     const token = await getToken({ template: "convex" });
     if (token) {
@@ -147,12 +165,21 @@ export async function POST(request: NextRequest) {
     const existingUsernames = await convex.query(api.teachers.getAllUsernames);
     const usernameSet = new Set(existingUsernames || []);
 
-    // Also get existing Clerk usernames
-    const clerkUsers = await clerkClient.users.getUserList({ limit: 500 });
-    for (const user of clerkUsers.data) {
-      if (user.username) {
-        usernameSet.add(user.username);
+    // Also get existing Clerk usernames (paginate through all users)
+    let offset = 0;
+    const pageSize = 500;
+    while (true) {
+      const clerkUsers = await clerkClient.users.getUserList({
+        limit: pageSize,
+        offset,
+      });
+      for (const user of clerkUsers.data) {
+        if (user.username) {
+          usernameSet.add(user.username);
+        }
       }
+      if (clerkUsers.data.length < pageSize) break;
+      offset += pageSize;
     }
 
     // Pre-generate credentials for all rows using the new format
@@ -177,6 +204,7 @@ export async function POST(request: NextRequest) {
           i + batchIndex,
           batchCredentials[batchIndex].username,
           batchCredentials[batchIndex].tempPassword,
+          convex,
         ),
       );
 

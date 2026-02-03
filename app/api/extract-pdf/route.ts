@@ -74,7 +74,13 @@ async function extractTocWithLLM(tocText: string): Promise<Chapter[]> {
   console.log("=== END LLM RESULT ===");
 
   const content = result.response.text() || '{"chapters":[]}';
-  const parsed = JSON.parse(content);
+  let parsed: { chapters?: Array<Omit<Chapter, "id" | "topics"> & { topics: Omit<Topic, "id">[] }> };
+  try {
+    parsed = JSON.parse(content);
+  } catch (e) {
+    console.error("Failed to parse LLM response as JSON:", content);
+    parsed = { chapters: [] };
+  }
 
   // Add UUIDs to chapters and topics
   return (parsed.chapters || []).map(
@@ -132,7 +138,13 @@ async function extractTocWithVision(pdfBuffer: Buffer): Promise<Chapter[]> {
   console.log("=== END VISION RESULT ===");
 
   const content = result.response.text() || '{"chapters":[]}';
-  const parsed = JSON.parse(content);
+  let parsed: { chapters?: Array<Omit<Chapter, "id" | "topics"> & { topics: Omit<Topic, "id">[] }> };
+  try {
+    parsed = JSON.parse(content);
+  } catch (e) {
+    console.error("Failed to parse Vision response as JSON:", content);
+    parsed = { chapters: [] };
+  }
 
   // Add UUIDs to chapters and topics
   return (parsed.chapters || []).map(

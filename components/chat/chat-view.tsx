@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useLocale } from "next-intl";
 import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ChatWelcome } from "./chat-welcome";
@@ -169,7 +170,13 @@ export function ChatView({ conversationId }: ChatViewProps) {
       let imageBase64: string | undefined;
       if (currentImage) {
         // Convert to base64 for vision API
-        imageBase64 = await fileToBase64(currentImage);
+        try {
+          imageBase64 = await fileToBase64(currentImage);
+        } catch (imgError) {
+          console.error("Failed to process image:", imgError);
+          toast.error("Зургийг боловсруулахад алдаа гарлаа. Өөр зураг оруулна уу.");
+          return;
+        }
 
         const uploadUrl = await generateUploadUrl();
         const uploadResult = await fetch(uploadUrl, {

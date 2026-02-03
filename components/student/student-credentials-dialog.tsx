@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Copy, Check, Download, AlertTriangle } from "lucide-react";
 import {
   Dialog,
@@ -33,6 +33,20 @@ export function StudentCredentialsDialog({
   const [copiedUsername, setCopiedUsername] = useState(false);
   const [copiedPassword, setCopiedPassword] = useState(false);
 
+  // Refs to store timeout IDs for cleanup
+  const timeoutRefs = useRef<{
+    username?: ReturnType<typeof setTimeout>;
+    password?: ReturnType<typeof setTimeout>;
+  }>({});
+
+  // Cleanup timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timeoutRefs.current.username) clearTimeout(timeoutRefs.current.username);
+      if (timeoutRefs.current.password) clearTimeout(timeoutRefs.current.password);
+    };
+  }, []);
+
   if (!credentials) return null;
 
   const copyToClipboard = async (text: string, type: "username" | "password") => {
@@ -40,10 +54,14 @@ export function StudentCredentialsDialog({
       await navigator.clipboard.writeText(text);
       if (type === "username") {
         setCopiedUsername(true);
-        setTimeout(() => setCopiedUsername(false), 2000);
+        // Clear existing timeout before setting new one
+        if (timeoutRefs.current.username) clearTimeout(timeoutRefs.current.username);
+        timeoutRefs.current.username = setTimeout(() => setCopiedUsername(false), 2000);
       } else {
         setCopiedPassword(true);
-        setTimeout(() => setCopiedPassword(false), 2000);
+        // Clear existing timeout before setting new one
+        if (timeoutRefs.current.password) clearTimeout(timeoutRefs.current.password);
+        timeoutRefs.current.password = setTimeout(() => setCopiedPassword(false), 2000);
       }
     } catch (error) {
       console.error("Failed to copy:", error);

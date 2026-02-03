@@ -147,18 +147,32 @@ export default function TeacherInfoPage() {
   };
 
   const handleAddSubmit = async (data: PersonFormData) => {
-    const response = await fetch("/api/teachers/create-with-clerk", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        lastName: data.lastName.trim(),
-        firstName: data.firstName.trim(),
-        phone1: data.phone1.trim(),
-        phone2: data.phone2?.trim() || undefined,
-      }),
-    });
+    let result;
+    try {
+      const response = await fetch("/api/teachers/create-with-clerk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lastName: data.lastName.trim(),
+          firstName: data.firstName.trim(),
+          phone1: data.phone1.trim(),
+          phone2: data.phone2?.trim() || undefined,
+        }),
+      });
 
-    const result = await response.json();
+      // Check HTTP status before parsing JSON
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP ${response.status}: Failed to create teacher`
+        );
+      }
+
+      result = await response.json();
+    } catch (error) {
+      // Re-throw with proper error message
+      throw error instanceof Error ? error : new Error("Failed to create teacher");
+    }
 
     if (!result.success) {
       throw new Error(result.error || "Failed to create teacher");

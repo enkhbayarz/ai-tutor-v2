@@ -493,16 +493,16 @@ rive.on(EventType.Stop, onStop);
 
 ## Checklist
 
-- [ ] Fix race condition in `create-with-clerk` routes (teachers & students)
-- [ ] Add auth token to chat-v2 route
-- [ ] Fix `onComplete` callback bug in bulk-import-dialog
-- [ ] Add env var validation to chat-v2 route
-- [ ] Add Clerk pagination to all routes
-- [ ] Add teacher rollback to bulk-import route
-- [ ] Add fetch error handling to teacher-info page
-- [ ] Add base64 error handling to chat-view
-- [ ] Fix memory leak in student-credentials-dialog
-- [ ] Add JSON parse safety to extract-pdf route
+- [x] Fix race condition in `create-with-clerk` routes (teachers & students)
+- [x] Add auth token to chat-v2 route
+- [x] Fix `onComplete` callback bug in bulk-import-dialog
+- [x] Add env var validation to chat-v2 route
+- [x] Add Clerk pagination to all routes
+- [x] Add teacher rollback to bulk-import route
+- [x] Add fetch error handling to teacher-info page
+- [x] Add base64 error handling to chat-view
+- [x] Fix memory leak in student-credentials-dialog
+- [x] Add JSON parse safety to extract-pdf route
 - [ ] Fix audio buffer padding in chat-avatar
 - [ ] Add autoplay error handling in chat-avatar
 - [ ] Fix AudioContext leak in chat-avatar

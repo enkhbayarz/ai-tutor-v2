@@ -13,9 +13,6 @@ const DEFAULT_USER_ID = "2e7fe617-25b8-4ca3-ab86-1a348eb658e4";
 const DEFAULT_SCHOOL_ID = "5036e963-d286-449c-8c08-f69fd7549a07";
 const DEFAULT_CLASS_ID = "2728a8a1-eab6-4502-afd1-79ca351e6199";
 
-// Initialize Convex client
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 interface ChatV2Request {
   message: string;
   classId?: string;
@@ -51,7 +48,7 @@ async function generateBackendToken(params: TokenParams): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     // Auth check
-    const { userId: clerkUserId } = await auth();
+    const { userId: clerkUserId, getToken } = await auth();
     if (!clerkUserId) {
       return new Response("Unauthorized", { status: 401 });
     }
@@ -64,6 +61,19 @@ export async function POST(request: NextRequest) {
 
     if (!message) {
       return new Response("Missing message", { status: 400 });
+    }
+
+    // Create Convex client per-request to avoid race conditions
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (!convexUrl) {
+      throw new Error("NEXT_PUBLIC_CONVEX_URL environment variable is required");
+    }
+    const convex = new ConvexHttpClient(convexUrl);
+
+    // Set Convex auth token from Clerk
+    const convexToken = await getToken({ template: "convex" });
+    if (convexToken) {
+      convex.setAuth(convexToken);
     }
 
     // Get user from Convex with externalUserId (generates if missing)

@@ -112,9 +112,15 @@ export function BulkImportDialog({
   }, []);
 
   const handleClose = useCallback(() => {
+    // Capture state before reset to check if we should call onComplete
+    const wasResults = step === "results";
+    const hadSuccess = summary.success > 0;
+
     resetState();
     onOpenChange(false);
-    if (step === "results" && summary.success > 0) {
+
+    // Call onComplete if we were on results step with successful imports
+    if (wasResults && hadSuccess) {
       onComplete?.();
     }
   }, [resetState, onOpenChange, step, summary.success, onComplete]);

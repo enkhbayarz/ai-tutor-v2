@@ -8,7 +8,6 @@ import {
   generateStudentPassword,
 } from "@/lib/student-credentials/generate-credentials";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
 });
@@ -46,6 +45,13 @@ export async function POST(
       );
     }
 
+    // Create Convex client per-request to avoid race conditions
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (!convexUrl) {
+      throw new Error("NEXT_PUBLIC_CONVEX_URL environment variable is required");
+    }
+    const convex = new ConvexHttpClient(convexUrl);
+
     // Set Convex auth token from Clerk
     const token = await getToken({ template: "convex" });
     if (token) {
@@ -75,12 +81,21 @@ export async function POST(
     const existingUsernames = await convex.query(api.students.getAllUsernames);
     const usernameSet = new Set(existingUsernames || []);
 
-    // Also get existing Clerk usernames
-    const clerkUsers = await clerkClient.users.getUserList({ limit: 500 });
-    for (const user of clerkUsers.data) {
-      if (user.username) {
-        usernameSet.add(user.username);
+    // Also get existing Clerk usernames (paginate through all users)
+    let offset = 0;
+    const pageSize = 500;
+    while (true) {
+      const clerkUsers = await clerkClient.users.getUserList({
+        limit: pageSize,
+        offset,
+      });
+      for (const user of clerkUsers.data) {
+        if (user.username) {
+          usernameSet.add(user.username);
+        }
       }
+      if (clerkUsers.data.length < pageSize) break;
+      offset += pageSize;
     }
 
     // Generate credentials
