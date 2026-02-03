@@ -607,6 +607,39 @@
         "lessonPrompt": "Please create a lesson plan",
         "exercisePrompt": "Please prepare exercise work"
       }
+    },
+    "testPrep": {
+      "step1Title": "Let me help you prepare a test!",
+      "grade": "Grade",
+      "selectSubject": "Select a subject",
+      "step2Title": "Select Topic",
+      "selectTopic": "What topic should the test cover?",
+      "noChapters": "No chapters found for this subject",
+      "customTopicPlaceholder": "Enter a custom topic...",
+      "enterCustomTopic": "Enter custom topic...",
+      "confirm": "Confirm",
+      "step3Title": "Test Configuration",
+      "duration": "Duration",
+      "shortTest": "Short quiz",
+      "regularTest": "Regular test",
+      "semesterTest": "Semester exam",
+      "questionCount": "Number of questions",
+      "difficulty": "Difficulty",
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "step4Title": "Question Types",
+      "selectQuestionTypes": "What types of questions to include?",
+      "multipleChoice": "Multiple choice (A, B, C, D)",
+      "fillBlank": "Fill in the blank",
+      "shortAnswer": "Short answer",
+      "problem": "Problem (with detailed solution)",
+      "diagram": "Diagram/Chart reading",
+      "generating": "Generating test...",
+      "back": "Back",
+      "cancel": "Cancel",
+      "next": "Continue",
+      "generate": "Generate Test"
     }
   }
 }

@@ -607,6 +607,39 @@
         "lessonPrompt": "Хичээлийн төлөвлөгөө гаргаж өгөөч",
         "exercisePrompt": "Дасгал ажил бэлдээд өгөөч"
       }
+    },
+    "testPrep": {
+      "step1Title": "Тест бэлдэхэд туслъя!",
+      "grade": "Анги",
+      "selectSubject": "Хичээл сонгоно уу",
+      "step2Title": "Сэдэв сонгох",
+      "selectTopic": "Ямар сэдвээр тест бэлдэх вэ?",
+      "noChapters": "Энэ хичээлд бүлэг олдсонгүй",
+      "customTopicPlaceholder": "Өөр сэдэв бичнэ үү...",
+      "enterCustomTopic": "Өөр сэдэв бичих...",
+      "confirm": "Батлах",
+      "step3Title": "Тестийн тохиргоо",
+      "duration": "Хугацаа",
+      "shortTest": "Богино шалгалт",
+      "regularTest": "Ээлжит шалгалт",
+      "semesterTest": "Улирлын шалгалт",
+      "questionCount": "Асуултын тоо",
+      "difficulty": "Түвшин",
+      "easy": "Хялбар",
+      "medium": "Дунд",
+      "hard": "Хүнд",
+      "step4Title": "Асуултын төрөл",
+      "selectQuestionTypes": "Ямар төрлийн асуултууд оруулах вэ?",
+      "multipleChoice": "Сонгох хариулттай (A, B, C, D)",
+      "fillBlank": "Нөхөх",
+      "shortAnswer": "Богино хариулт",
+      "problem": "Бодлого (Дэлгэрэнгүй бодолттой)",
+      "diagram": "Зураг/Диаграм уншиж хариулах",
+      "generating": "Тестийг бэлдэж байна...",
+      "back": "Буцах",
+      "cancel": "Цуцлах",
+      "next": "Үргэлжлүүлэх",
+      "generate": "Тест үүсгэх"
     }
   }
 }

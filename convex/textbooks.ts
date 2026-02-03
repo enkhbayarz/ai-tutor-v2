@@ -56,7 +56,7 @@ export const listActive = query({
       return true;
     });
 
-    // Get thumbnail URLs
+    // Get thumbnail URLs and include tableOfContents
     const results = await Promise.all(
       textbooks.map(async (t) => {
         const thumbnailUrl = await ctx.storage.getUrl(t.thumbnailId);
@@ -65,6 +65,7 @@ export const listActive = query({
           subjectName: t.subjectName,
           grade: t.grade,
           thumbnailUrl,
+          tableOfContents: t.tableOfContents,
         };
       })
     );
