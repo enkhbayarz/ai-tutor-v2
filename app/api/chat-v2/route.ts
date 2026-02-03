@@ -66,7 +66,9 @@ export async function POST(request: NextRequest) {
     // Create Convex client per-request to avoid race conditions
     const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
     if (!convexUrl) {
-      throw new Error("NEXT_PUBLIC_CONVEX_URL environment variable is required");
+      throw new Error(
+        "NEXT_PUBLIC_CONVEX_URL environment variable is required"
+      );
     }
     const convex = new ConvexHttpClient(convexUrl);
 
@@ -80,6 +82,12 @@ export async function POST(request: NextRequest) {
     const convexUser = await convex.mutation(api.users.ensureExternalUserId, {
       clerkId: clerkUserId,
     });
+
+    // Get student data for grade level
+    const student = await convex.query(api.students.getByClerkId, {
+      clerkId: clerkUserId,
+    });
+    const gradeLevel = student?.grade ?? 8;
 
     // Use dynamic values from Convex user, fallback to defaults
     const externalUserId = convexUser?.externalUserId || DEFAULT_USER_ID;
@@ -104,7 +112,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           message: message,
-          class_id: DEFAULT_CLASS_ID,
+          grade_level: gradeLevel,
           session_id: sessionId,
           image_base64: imageBase64 || null,
           include_vision: includeVision || false,
