@@ -228,6 +228,8 @@ export function ChatSidebar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
+                type="button"
+                aria-label={t("newChat")}
                 onClick={() => router.push(`/${locale}/chat?t=${Date.now()}`)}
                 className="flex items-center justify-center w-10 h-10 mt-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
@@ -298,6 +300,8 @@ export function ChatSidebar() {
           {/* New chat button (full width) */}
           <div className="shrink-0 mb-2">
             <button
+              type="button"
+              aria-label={t("newChat")}
               onClick={() => router.push(`/${locale}/chat?t=${Date.now()}`)}
               className="flex items-center gap-2 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer w-full"
             >

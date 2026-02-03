@@ -20,7 +20,8 @@
       "WebFetch(domain:upstash.com)",
       "WebFetch(domain:news.convex.dev)",
       "WebFetch(domain:stack.convex.dev)",
-      "Bash(bun add:*)"
+      "Bash(bun add:*)",
+      "WebFetch(domain:www.convex.dev)"
     ]
   }
 }

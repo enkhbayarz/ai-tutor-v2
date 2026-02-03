@@ -279,6 +279,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
       saveMessage,
       recordInteraction,
       fileToBase64,
+      locale,
     ]
   );
 
